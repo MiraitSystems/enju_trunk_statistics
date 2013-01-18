@@ -29,6 +29,14 @@
   </tr>
 
   <tr class="line<%= cycle("0", "1") -%>">
+<script>
+$(function(){
+  if (typeof $('#timezone_start_at').setCalendar == "function") {
+    $('#timezone_start_at').setCalendar({src:'/assets/calendar.png'});
+    $('#timezone_end_at').setCalendar({src:'/assets/calendar.png'});
+  }
+});
+</script>
 <%= form_tag(:action => :get_timezone_report)  do -%>
     <td><%= t('statistic_report.timezone_report') -%></td>
     <td><%= text_field_tag :timezone_start_at, @t_start_at if @t_start_at %> - <%= text_field_tag :timezone_end_at, @t_end_at if @t_end_at %>  <%= t('statistic_report.day') -%></td>
@@ -38,6 +46,14 @@
   </tr>
 
   <tr class="line<%= cycle("0", "1") -%>">
+<script>
+$(function(){
+  if (typeof $('#day_start_at').setCalendar == "function") {
+    $('#day_start_at').setCalendar({src:'/assets/calendar.png'});
+    $('#day_end_at').setCalendar({src:'/assets/calendar.png'});
+  }
+});
+</script>
 <%= form_tag(:action => :get_day_report)  do -%>
     <td><%= t('statistic_report.day_report') -%></td>
     <td><%= text_field_tag :day_start_at, @d_start_at if @d_start_at %> - <%= text_field_tag :day_end_at, @d_end_at if @d_end_at %>  <%= t('statistic_report.day') -%></td>
@@ -47,6 +63,14 @@
   </tr>
 
   <tr class="line<%= cycle("0", "1") -%>">
+<script>
+$(function(){
+  if (typeof $('#age_start_at').setCalendar == "function") {
+    $('#age_start_at').setCalendar({src:'/assets/calendar.png'});
+    $('#age_end_at').setCalendar({src:'/assets/calendar.png'});
+  }
+});
+</script>
 <%= form_tag(:action => :get_age_report)  do -%>
     <td><%= t('statistic_report.age_report') -%></td>
     <td><%= text_field_tag :age_start_at, @a_start_at if @a_start_at %> - <%= text_field_tag :age_end_at, @a_end_at if @a_end_at %>  <%= t('statistic_report.day') -%></td>
