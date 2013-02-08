@@ -1,0 +1,14 @@
+<div id="content_detail" class="ui-corner-all">
+<h1 class="title"><%= t('activerecord.models.ndl_report') -%></h1>
+<div id="content_list">
+<div style="color: green"><%= flash[:message] -%></div>
+
+<%= form_tag(:action => :get_ndl_report) do -%>
+  出力年度:&nbsp;
+  平成 <%= text_field_tag :term, @term ,:class => "resource_integer" %> 年度
+  &nbsp;
+  <%= submit_tag t('ndl_report.submit') %>
+<%- end -%>
+
+</div>
+</div>
