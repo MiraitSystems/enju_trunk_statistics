@@ -8,6 +8,7 @@ en:
         term: Term
 
   statistic_report:
+    yearly_report: yearly statistics
     monthly_report: monthly statistics
     daily_report: daily statistics
     timezone_report: by timezone

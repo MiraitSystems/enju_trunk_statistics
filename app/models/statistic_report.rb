@@ -1,4 +1,102 @@
 class StatisticReport < ActiveRecord::Base
+  def self.create_file(target, type, options = {})
+=begin
+    raise "invalid parameter: no path" if out_dir.nil? || out_dir.length < 1
+    tsv_file = out_dir + "item_register_#{type}.tsv"
+    pdf_file = out_dir + "item_register_#{type}.pdf"
+    logger.info "output item_register_#{type} tsv: #{tsv_file} pdf: #{pdf_file}"
+    # create output path
+    FileUtils.mkdir_p(out_dir) unless FileTest.exist?(out_dir)
+    # get item
+    if type == 'all'
+      @items = Item.order("bookstore_id DESC, acquired_at ASC, item_identifier ASC").all
+    else
+      @items = Item.joins(:manifestation).where(["manifestations.manifestation_type_id in (?)", ManifestationType.type_ids(type)]).order("items.bookstore_id DESC, items.acquired_at ASC, items.item_identifier ASC").all
+    end
+    # make tsv
+    make_item_register_tsv(tsv_file, @items) if file_type.nil? || file_type == "tsv"
+    # make pdf
+    make_item_register_pdf(pdf_file, @items, "item_register_#{type}") if file_type.nil? || file_type == "pdf"=
+=end
+
+#    return true
+    if type == 'pdf'
+      file = create_statistic_report_pdf(target, options)
+    else
+      # TODO: TSVの処理を書く
+    end
+    return file
+  end
+
+  def self.create_statistic_report_pdf(target, options = {})
+    report = ThinReports::Report.new :layout => get_layout_path("#{target}_report")
+    # set page
+    report.events.on :page_create do |e| e.page.item(:page).value(e.page.no) end
+    report.events.on :generate do |e| 
+      e.pages.each do |page| page.item(:total).value(e.report.page_count) end
+    end
+    report.start_new_page
+    report.page.values(:date => Time.now)
+    # set date
+    case target
+    when 'yearly' then set_yearly_report_pdf(report, options) 
+    when 'montly' then logger.info '###' #TODO
+    when 'daily'  then logger.info '###' #TODO
+    end
+    return report.generate
+  end
+
+  def self.set_yearly_report_pdf(report, options = {})
+    libraries = Library.real.all
+    # term
+    report.page.values(
+      :year_start_at => options[:start_at], 
+      :year_end_at   => options[:end_at]
+    )
+    # footer
+    report.layout.config.list(:list) do
+      events.on :footer_insert do |e|
+        libraries.each_with_index do |library, num|
+          checkout_count = 0#Checkout.count # 館ごとの値を取得する
+          reserve_count  = 0#Reserve.count  # 館ごとの値を取得する
+          e.section.item("checkout_total##{num}").value(checkout_count)
+          e.section.item("reserve_total##{num}").value(reserve_count)
+          # footer layout
+          e.section.item("library_footer_frame##{num}").show
+          e.section.item("library_footer_column_line##{num}").show
+          e.section.item("checkout_total##{num}").show
+          e.section.item("reserve_total##{num}").show
+        end
+      end
+    end
+    # header
+    libraries.each_with_index do |library, num|
+      report.page.list(:list).header.item("library##{num}").value(library.display_name)
+      # header layout
+      report.page.list(:list).header.item("library_header_frame##{num}").show
+      report.page.list(:list).header.item("library_header_column_line##{num}").show
+      report.page.list(:list).header.item("library_header_row_line##{num}").show
+      report.page.list(:list).header.item("library_header_checkout##{num}").show
+      report.page.list(:list).header.item("library_header_reserve##{num}").show
+    end
+    # list data
+    (options[:end_at].to_i - options[:start_at].to_i + 1).times do |cnt|
+      report.page.list(:list).add_row do |row|
+        row.item(:year).value(options[:start_at].to_i + cnt)
+        libraries.each_with_index do |library, num|
+          row.item("checkout##{num}").value('0') #TODO
+          row.item("reserve##{num}").value('0') #TODO
+          #layout
+          row.item("library_detail_column_line1##{num}").show
+          row.item("library_detail_column_line2##{num}").show
+          row.item("library_detail_row_line##{num}").show
+          row.item("checkout##{num}").show
+          row.item("checkout##{num}").show
+        end
+      end
+    end
+  end
+
   def self.get_monthly_report_pdf(term)
     libraries = Library.all
     checkout_types = CheckoutType.all

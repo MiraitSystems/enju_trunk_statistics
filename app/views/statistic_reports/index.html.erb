@@ -10,6 +10,23 @@
     <th>&nbsp;</th>
   </tr>
 
+<%= form_tag :action => :get_report, :id => 'form' do %>
+  <% if SystemConfiguration.get('statistic_report.yearly_public')%>
+    <tr class="line<%= cycle("0", "1") %>">
+      <td><%= t('statistic_report.yearly_report') %></td>
+      <td>
+        <%= text_field_tag :yearly_start_at, (@yearly_start_at if @yearly_start_at), :class => "resource_integer" %>
+        -
+        <%= text_field_tag :yearly_end_at, (@yearly_end_at if @yearly_end_at), :class => "resource_integer" %>
+        <%= t('statistic_report.year') %>
+        <%= hidden_field_tag :type, 1 %>
+      </td>
+      <td><%= submit_tag t('statistic_report.submit'), :name => 'pdf' %></td>
+      <td></td>
+    </tr>
+  <% end %>
+<% end %>
+
 <% if SystemConfiguration.get('statistic_report.monthly_public') %>
   <tr class="line<%= cycle("0", "1") -%>">
     <%= form_tag(:action => :get_monthly_report)  do -%>
@@ -91,6 +108,20 @@ $(function(){
     <%- end -%>
   </tr>
 <%- end -%>
+
+<%# if SystemConfiguration.get('statistic_report.manifestation_public') %>
+  <tr class="line<%= cycle("0", "1") %>">
+    <td><%= t('statistic_report.manifestations_report') %></td>
+    <%= form_tag(:action => :get_items_report)  do %>
+      <td>
+        <%= text_field_tag :term, (@items_year if @items_year), :class => "resource_integer" %>
+        <%= t('statistic_report.year') %>
+      </td>
+      <td><%= submit_tag t('statistic_report.submit') %></td>
+      <td></td> 
+    <% end %>
+  </tr>
+<%# end %>
 
 <%- if SystemConfiguration.get('statistic_report.items') %>
   <tr class="line<%= cycle("0", "1") -%>">

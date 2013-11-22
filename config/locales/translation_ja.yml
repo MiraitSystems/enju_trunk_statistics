@@ -8,6 +8,7 @@ ja:
         term: 対象期間
 
   statistic_report:
+    yearly_report: 年別利用統計
     monthly_report: 月別利用統計
     daily_report: 日別利用統計
     timezone_report: 時間帯別利用統計
