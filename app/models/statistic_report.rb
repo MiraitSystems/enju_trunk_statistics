@@ -42,8 +42,44 @@ class StatisticReport < ActiveRecord::Base
     when 'yearly' then set_yearly_report_pdf(report, options) 
     when 'montly' then logger.info '###' #TODO
     when 'daily'  then logger.info '###' #TODO
+    when 'users'  then set_users_report_pdf(report, options)
     end
     return report.generate
+  end
+
+  def self.set_users_report_pdf(report, options)
+    # TODO: 値に正しい結果をセットすること
+    # 処理数が多い場合はdelayed_jobに渡すこと
+    libraries = Library.real.all
+    # term
+    report.page.values(:term => options[:term])
+    # list
+    users = User.order('library_id ASC, required_role_id DESC')# TODO: 値に正しい結果をセットすること
+    users.each_with_index do |user, num|
+      report.page.list(:list).add_row do |row|
+        row.item('library').value(user.library.display_name) 
+        row.item('role').value(user.required_role.display_name)
+        row.item('full_name').value(user.patron.full_name)
+        row.item('username').value(user.username)
+        #user.checkouts.where()
+        1.upto(12) do |cnt|
+          row.item("checkout#{cnt}").value('0') #TODO
+          row.item("reserve#{cnt}").value('0')  #TODO
+        end
+        row.item("checkoutall").value('0')      #TODO
+        row.item("reserveall").value('0')       #TODO
+        # layout
+        row.item('role_line').show unless user.required_role_id == users[num + 1].try(:required_role).try(:id) 
+        unless user.library_id == users[num + 1].try(:library).try(:id)
+          row.item('library_line').show 
+          row.item('role_line').show
+        end
+        if user.library_id == users[num - 1].try(:library).try(:id)  
+          row.item('library').hide if user.library_id == users[num - 1].try(:library).try(:id)
+          row.item('role').hide if user.required_role_id == users[num - 1].try(:required_role).try(:id)
+        end
+      end
+    end 
   end
 
   def self.set_yearly_report_pdf(report, options = {})

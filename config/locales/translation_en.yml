@@ -15,6 +15,7 @@ en:
     day_report: by day of week
     age_report: by age of users
     manifestations_report: manifestations statistics
+    users_report: by users
     items_report: items
     inout_items_report: in&out
     loans_report: inter library loan

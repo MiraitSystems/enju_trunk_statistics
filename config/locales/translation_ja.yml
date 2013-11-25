@@ -15,6 +15,7 @@ ja:
     day_report: 曜日別利用統計
     age_report: 年代別利用統計
     manifestations_report: 資料別利用統計
+    users_report: 利用者別利用統計
     items_report: 蔵書統計
     inout_items_report: 受払統計
     loans_report: 相互貸借統計

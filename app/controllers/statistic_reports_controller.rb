@@ -4,7 +4,7 @@ class StatisticReportsController < ApplicationController
   def index
     # set yyyy
     yyyy = Time.zone.now.years_ago(1).strftime("%Y")
-    @year = @yearly_start_at = @yearly_end_at = @items_year = @inout_term = @loans_term = @group_term = @dep_term = yyyy
+    @year = @yearly_start_at = @yearly_end_at = @items_year = @users_year = @inout_term = @loans_term = @group_term = @dep_term = yyyy
     # set yyyymm
     yyyymm = Time.zone.now.months_ago(1).strftime("%Y%m")
     @month = yyyymm
@@ -24,9 +24,13 @@ class StatisticReportsController < ApplicationController
   def get_report
     case params[:type].to_i
     when 1
-      target    = 'yearly'
+      target   = 'yearly'
       filename = Setting.statistic_report.yearly
-      options   = { start_at: params[:yearly_start_at], end_at: params[:yearly_end_at] }
+      options  = { start_at: params[:yearly_start_at], end_at: params[:yearly_end_at] }
+    when 8
+      target   = 'users' 
+      filename = Setting.statistic_report.users
+      options  = { term: params[:term] }
     end 
 
     if params[:tsv]
