@@ -2,19 +2,15 @@ class StatisticReportsController < ApplicationController
   before_filter :check_role
 
   def index
-    @year = Time.zone.now.years_ago(1).strftime("%Y")
-    @month = Time.zone.now.months_ago(1).strftime("%Y%m")
-    @t_start_at = Time.zone.now.months_ago(1).beginning_of_month.strftime("%Y%m%d")
-    @t_end_at = Time.zone.now.months_ago(1).end_of_month.strftime("%Y%m%d")
-    @d_start_at = Time.zone.now.months_ago(1).beginning_of_month.strftime("%Y%m%d")
-    @d_end_at = Time.zone.now.months_ago(1).end_of_month.strftime("%Y%m%d")
-    @a_start_at = Time.zone.now.months_ago(1).beginning_of_month.strftime("%Y%m%d")
-    @a_end_at = Time.zone.now.months_ago(1).end_of_month.strftime("%Y%m%d")
-    @items_year = Time.zone.now.years_ago(1).strftime("%Y")
-    @inout_term = Time.zone.now.years_ago(1).strftime("%Y")
-    @loans_term = Time.zone.now.years_ago(1).strftime("%Y")
-    @group_term = Time.zone.now.years_ago(1).strftime("%Y")
-    @dep_term = Time.zone.now.years_ago(1).strftime("%Y")
+    # set yyyy
+    yyyy = Time.zone.now.years_ago(1).strftime("%Y")
+    @year = @yearly_start_at = @yearly_end_at = @items_year = @users_year = @departments_year= @inout_term = @loans_term = @group_term = @dep_term = yyyy
+    # set yyyymm
+    yyyymm = Time.zone.now.months_ago(1).strftime("%Y%m")
+    @month = yyyymm
+    # set yyyymmdd
+    yyyymmdd = Time.zone.now.months_ago(1).beginning_of_month.strftime("%Y%m%d")
+    @t_start_at = @t_end_at = @d_start_at = @d_end_at = @a_start_at = @a_end_at = yyyymmdd 
   end
 
   # check role
@@ -22,6 +18,34 @@ class StatisticReportsController < ApplicationController
     unless current_user.try(:has_role?, 'Librarian')
       access_denied; return
     end
+  end
+
+  #TODO: 重複文が多いのであとでget_reportメソッドに統合すること
+  def get_report
+    case params[:type].to_i
+    when 1
+      target   = 'yearly'
+      filename = Setting.statistic_report.yearly
+      options  = { start_at: params[:yearly_start_at], end_at: params[:yearly_end_at] }
+    when 8
+      target   = 'users' 
+      filename = Setting.statistic_report.users
+      options  = { term: params[:term] }
+    when 9
+      target   = 'departments' 
+      filename = Setting.statistic_report.departments
+      options  = { term: params[:term] }
+    end 
+
+    if params[:tsv]
+      #TODO TSVの処理を書く
+    else
+      # file nameどうにかする
+      send_data StatisticReport.create_file(target, 'pdf', options), :file_name => "#{filename}.pdf", :type => 'application/pdf'
+    end
+  #rescue
+  # TODO:
+  # 後で書く
   end
 
   def get_monthly_report
@@ -411,7 +435,7 @@ class StatisticReportsController < ApplicationController
       else
         file = StatisticReport.get_departments_daily_pdf(term)
         if file
-          send_data file, :filename => "#{term}_#{Setting.statistic_report.departments}", :type => 'application/pdf', :disposition => 'attachment'       
+          send_data file, :filename => "#{term}_#{Setting.statistic_report.departments_pdf}", :type => 'application/pdf', :disposition => 'attachment'       
         else
           raise
         end
