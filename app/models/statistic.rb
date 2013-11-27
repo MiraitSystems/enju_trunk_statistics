@@ -725,7 +725,20 @@ class Statistic < ActiveRecord::Base
         statistic.value = Checkout.count_by_sql(["select count(distinct checkouts.user_id) from checkouts, users where checkouts.user_id = users.id AND users.department_id = ? AND checkouts.checked_at >= ? AND checkouts.checked_at  < ?", id, start_at, end_at])
         statistic.save! if statistic.value > 0
       end
-
+      # checkout by each departments
+      @department_ids.each do |id|
+        statistic = Statistic.new
+        set_date(statistic, start_at, term_id)
+        statistic.data_type = data_type
+        statistic.department_id = id
+        statistic.option = 1
+        statistic.value = Checkout.count_by_sql([
+          "select count(*) from checkouts, users where
+            checkouts.user_id = users.id AND users.department_id = ? AND checkouts.checked_at >= ? AND checkouts.checked_at  < ?",
+          id, start_at, end_at
+        ])
+        statistic.save! if statistic.value > 0
+      end
 =begin
       # checkout each user_type
       statistic = Statistic.new
@@ -926,7 +939,19 @@ class Statistic < ActiveRecord::Base
       statistic.option = 2
       statistic.value = Reserve.count_by_sql(["select count(*) from reserves where created_at >= ? AND created_at  < ? AND created_by NOT IN (?)", start_at, end_at, @librarian_ids])
       statistic.save! if statistic.value > 0
-
+      # reserves by users each departments
+      @department_ids.each do |id|
+        statistic = Statistic.new
+        set_date(statistic, start_at, term_id)
+        statistic.data_type = data_type
+        statistic.department_id = id
+        statistic.value = Reserve.count_by_sql([
+          "select count(*) from reserves, users 
+             where reserves.user_id = users.id AND users.department_id = ? AND reserves.created_at >= ? AND reserves.created_at  < ?",
+           id, start_at, end_at
+        ])
+        statistic.save! if statistic.value > 0
+      end
 =begin
       @libraries.each do |library|
         statistic = Statistic.new
