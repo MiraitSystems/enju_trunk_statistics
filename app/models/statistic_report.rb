@@ -82,22 +82,30 @@ class StatisticReport < ActiveRecord::Base
     end 
   end
 
+  # 所属別利用統計
   def self.set_departments_report_pdf(report, options = {})
-    libraries = Library.real.all
-    departments = Department.all
     # term
     report.page.values(:term => options[:term])
     # list
-    departments.each do |department| 
+    Department.all.each do |department| 
       report.page.list(:list).add_row do |row|
-        row.item("department").value(department.display_name)  #TODO
+        row.item("department").value(department.display_name)
+        checkoutall = 0
+        reserveall  = 0
         1.upto(12) do |cnt|
-          row.item("checkout#{cnt}").value('0') #TODO
-          row.item("reserve#{cnt}").value('0')  #TODO
+          conditions = {
+            :yyyymm        => "#{options[:term]}#{"%02d" % cnt}", 
+            :department_id => department.id
+          }
+          checkout = Statistic.where(conditions.merge(:data_type => 122, :option => 1)).first.value rescue 0
+          reserve  = Statistic.where(conditions.merge(:data_type => 133)).first.value rescue 0
+          row.item("checkout#{cnt}").value(checkout)
+          row.item("reserve#{cnt}").value(reserve)
+          checkoutall = checkoutall + checkout
+          reserveall  = reserveall  + reserve
         end
-        row.item("checkoutall").value('0')      #TODO
-        row.item("reserveall").value('0')       #TODO
-#      Statistic.where(:yyyymm => "#{term.to_i + 1}#{"%02d" % (t + 1)}", :data_type => 122, :department_id => department.id).first.value rescue 0
+        row.item("checkoutall").value(checkoutall)
+        row.item("reserveall").value(reserveall) 
       end
     end
   end

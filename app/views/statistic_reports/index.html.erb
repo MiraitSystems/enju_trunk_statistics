@@ -126,7 +126,7 @@ $(function(){
     <tr class="line<%= cycle("0", "1") %>">
       <td><%= t('statistic_report.departments_report') %></td>
       <td>
-        <%= text_field_tag :term, (@departments_year if @departments_year), :class => "resource_integer" %>
+        <%= text_field_tag :department_term, (@departments_year if @departments_year), :class => "resource_integer" %>
         <%= t('statistic_report.year') %>
         <%= hidden_field_tag :type, 9 %>
       </td>
