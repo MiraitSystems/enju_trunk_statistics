@@ -2,15 +2,7 @@ class StatisticReportsController < ApplicationController
   before_filter :check_role
 
   def index
-    # set yyyy
-    yyyy = Time.zone.now.years_ago(1).strftime("%Y")
-    @year = @yearly_start_at = @yearly_end_at = @items_year = @users_year = @inout_term = @loans_term = @group_term = @dep_term = yyyy
-    # set yyyymm
-    yyyymm = Time.zone.now.months_ago(1).strftime("%Y%m")
-    @month = yyyymm
-    # set yyyymmdd
-    yyyymmdd = Time.zone.now.months_ago(1).beginning_of_month.strftime("%Y%m%d")
-    @t_start_at = @t_end_at = @d_start_at = @d_end_at = @a_start_at = @a_end_at = yyyymmdd 
+    prepare_options(params)
   end
 
   # check role
@@ -21,27 +13,28 @@ class StatisticReportsController < ApplicationController
   end
 
   #TODO: 重複文が多いのであとでget_reportメソッドに統合すること
-  def get_report
-    case params[:type].to_i
-    when 1
-      target   = 'yearly'
-      filename = Setting.statistic_report.yearly
-      options  = { start_at: params[:yearly_start_at], end_at: params[:yearly_end_at] }
-    when 8
-      target   = 'users' 
-      filename = Setting.statistic_report.users
-      options  = { term: params[:term] }
+  def get_report 
+    target = params[:type]
+    case target
+    when 'yearly'      then options  = { start_at: params[:yearly_start_at], end_at: params[:yearly_end_at] }
+    when 8             then options  = { term: params[:term] }
+    when 'departments' then options  = { term: params[:department_term] }
     end 
 
-    if params[:tsv]
-      #TODO TSVの処理を書く
+    if check_term(target, options)
+      # send data
+      if params[:tsv]
+        #TODO TSVの処理を書く
+      else
+        # TODO: file nameどうにかする
+        #send_data StatisticReport.create_file(target, 'pdf', options), :file_name => "#{filename}.pdf", :type => 'application/pdf'
+        # file名はいらない？
+        send_data StatisticReport.create_file(target, 'pdf', options), :file_name => "#{target}_report.pdf", :type => 'application/pdf'
+      end
     else
-      # file nameどうにかする
-      send_data StatisticReport.create_file(target, 'pdf', options), :file_name => "#{filename}.pdf", :type => 'application/pdf'
+      prepare_options(params)
+      render :index
     end
-  #rescue
-  # TODO:
-  # 後で書く
   end
 
   def get_monthly_report
@@ -431,7 +424,7 @@ class StatisticReportsController < ApplicationController
       else
         file = StatisticReport.get_departments_daily_pdf(term)
         if file
-          send_data file, :filename => "#{term}_#{Setting.statistic_report.departments}", :type => 'application/pdf', :disposition => 'attachment'       
+          send_data file, :filename => "#{term}_#{Setting.statistic_report.departments_pdf}", :type => 'application/pdf', :disposition => 'attachment'       
         else
           raise
         end
@@ -458,8 +451,52 @@ class StatisticReportsController < ApplicationController
   end
 
 private
+  def prepare_options(params = {})
+    # set yyyy
+    yyyy = Time.zone.now.years_ago(1).strftime("%Y")
+    @year             = yyyy 
+    @yearly_start_at  = params[:yearly_start_at] || yyyy
+    @yearly_end_at    = params[:yearly_end_at]   || yyyy
+    @items_year       = yyyy
+    @users_year       = yyyy
+    @departments_year = params[:department_term] || yyyy
+    @inout_term       = yyyy
+    @loans_term       = yyyy
+    @group_term       = yyyy
+    @dep_term         = yyyy
+    # set yyyymm
+    yyyymm = Time.zone.now.months_ago(1).strftime("%Y%m")
+    @month = yyyymm
+    # set yyyymmdd
+    yyyymmdd = Time.zone.now.months_ago(1).beginning_of_month.strftime("%Y%m%d")
+    @t_start_at = yyyymmdd
+    @t_end_at   = yyyymmdd
+    @d_start_at = yyyymmdd
+    @d_end_at   = yyyymmdd
+    @a_start_at = yyyymmdd
+    @a_end_at   = yyyymmdd 
+  end
+
+  def check_term(target, options)
+    case target
+    # yyyy
+    when 'departments'
+      if options[:term] !~ /^\d{4}$/
+        flash[:message] = t('statistic_report.invalid_year')
+        return false
+      end
+    # yyyy - yyyy
+    when 'yearly'
+      if options[:start_at] !~ /^\d{4}$/ or options[:end_at] !~ /^\d{4}$/ or options[:start_at].to_i > options[:end_at].to_i
+        flash[:message] = t('statistic_report.invalid_year')
+        return false
+      end
+    end
+    true
+  end
+
   def month_term?(term)
-	    begin 
+    begin 
       Time.parse("#{term}01")
       return true
     rescue ArgumentError
@@ -475,5 +512,4 @@ private
       return false
     end
   end
-
 end

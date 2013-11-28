@@ -21,6 +21,7 @@ en:
     loans_report: inter library loan
     groups_report: by user groups
     departments_report: by departments
+    departments_extent_report: by extent departments
     invalid_year: term is invalid.
     invalid_month: term is invalid.
     no_corporate: no coporate
