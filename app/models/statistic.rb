@@ -952,7 +952,7 @@ class Statistic < ActiveRecord::Base
         ])
         statistic.save! if statistic.value > 0
       end
-=begin
+      # reserves by libraries
       @libraries.each do |library|
         statistic = Statistic.new
         set_date(statistic, start_at, term_id)
@@ -960,6 +960,8 @@ class Statistic < ActiveRecord::Base
         statistic.library_id = library.id
         statistic.value = Reserve.count_by_sql(["select count(*) from reserves, libraries where libraries.id = reserves.receipt_library_id AND libraries.id = ? AND reserves.created_at >= ? AND reserves.created_at < ?", library.id, start_at, end_at])
         statistic.save! if statistic.value > 0
+      end
+=begin
         # reserve on counter
         statistic = Statistic.new
         set_date(statistic, start_at, term_id)

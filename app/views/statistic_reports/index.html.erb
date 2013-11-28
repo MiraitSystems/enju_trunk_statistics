@@ -19,7 +19,7 @@
         -
         <%= text_field_tag :yearly_end_at, (@yearly_end_at if @yearly_end_at), :class => "resource_integer" %>
         <%= t('statistic_report.year') %>
-        <%= hidden_field_tag :type, 1 %>
+        <%= hidden_field_tag :type, 'yearly' %>
       </td>
       <td><%= submit_tag t('statistic_report.submit'), :name => 'pdf' %></td>
       <td></td>
@@ -145,7 +145,7 @@ $(function(){
       <td>
         <%= text_field_tag :department_term, (@departments_year if @departments_year), :class => "resource_integer" %>
         <%= t('statistic_report.year') %>
-        <%= hidden_field_tag :type, 9 %>
+        <%= hidden_field_tag :type, 'departments' %>
       </td>
       <td><%= submit_tag t('statistic_report.submit'), :name => 'pdf' %></td>
       <td></td>

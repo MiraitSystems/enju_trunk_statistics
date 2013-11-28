@@ -14,32 +14,27 @@ class StatisticReportsController < ApplicationController
 
   #TODO: 重複文が多いのであとでget_reportメソッドに統合すること
   def get_report 
-    case params[:type].to_i
-    when 1
-      target   = 'yearly'
-      filename = Setting.statistic_report.yearly
-      options  = { start_at: params[:yearly_start_at], end_at: params[:yearly_end_at] }
-    when 8
-      target   = 'users' 
-      filename = Setting.statistic_report.users
-      options  = { term: params[:term] }
-    when 9
-      target   = 'departments' 
-      filename = Setting.statistic_report.departments
-      options  = { term: params[:department_term] }
+    target = params[:type]
+    case target
+    when 'yearly'      then options  = { start_at: params[:yearly_start_at], end_at: params[:yearly_end_at] }
+    when 8             then options  = { term: params[:term] }
+    when 'departments' then options  = { term: params[:department_term] }
     end 
-    # check term
-    check_term(target, options)
-    # send data
-    if params[:tsv]
-      #TODO TSVの処理を書く
+
+    if check_term(target, options)
+      # send data
+      if params[:tsv]
+        #TODO TSVの処理を書く
+      else
+        # TODO: file nameどうにかする
+        #send_data StatisticReport.create_file(target, 'pdf', options), :file_name => "#{filename}.pdf", :type => 'application/pdf'
+        # file名はいらない？
+        send_data StatisticReport.create_file(target, 'pdf', options), :file_name => "#{target}_report.pdf", :type => 'application/pdf'
+      end
     else
-      # TODO: file nameどうにかする
-      send_data StatisticReport.create_file(target, 'pdf', options), :file_name => "#{filename}.pdf", :type => 'application/pdf'
+      prepare_options(params)
+      render :index
     end
-  rescue
-    prepare_options(params)
-    render :index
   end
 
   def get_monthly_report
@@ -460,8 +455,8 @@ private
     # set yyyy
     yyyy = Time.zone.now.years_ago(1).strftime("%Y")
     @year             = yyyy 
-    @yearly_start_at  = yyyy
-    @yearly_end_at    = yyyy
+    @yearly_start_at  = params[:yearly_start_at] || yyyy
+    @yearly_end_at    = params[:yearly_end_at]   || yyyy
     @items_year       = yyyy
     @users_year       = yyyy
     @departments_year = params[:department_term] || yyyy
@@ -484,12 +479,20 @@ private
 
   def check_term(target, options)
     case target
+    # yyyy
     when 'departments'
-      unless options[:term] =~ /^\d{4}$/
+      if options[:term] !~ /^\d{4}$/
         flash[:message] = t('statistic_report.invalid_year')
-        raise
+        return false
+      end
+    # yyyy - yyyy
+    when 'yearly'
+      if options[:start_at] !~ /^\d{4}$/ or options[:end_at] !~ /^\d{4}$/ or options[:start_at].to_i > options[:end_at].to_i
+        flash[:message] = t('statistic_report.invalid_year')
+        return false
       end
     end
+    true
   end
 
   def month_term?(term)
@@ -509,5 +512,4 @@ private
       return false
     end
   end
-
 end
