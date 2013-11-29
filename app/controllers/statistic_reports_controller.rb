@@ -17,7 +17,7 @@ class StatisticReportsController < ApplicationController
     target = params[:type]
     case target
     when 'yearly'      then options  = { start_at: params[:yearly_start_at], end_at: params[:yearly_end_at] }
-    when 8             then options  = { term: params[:term] }
+    when 'users'       then options  = { term: params[:users_term] }
     when 'departments' then options  = { term: params[:department_term] }
     end 
 
@@ -458,7 +458,7 @@ private
     @yearly_start_at  = params[:yearly_start_at] || yyyy
     @yearly_end_at    = params[:yearly_end_at]   || yyyy
     @items_year       = yyyy
-    @users_year       = yyyy
+    @users_term       = params[:users_term]      || yyyy
     @departments_year = params[:department_term] || yyyy
     @inout_term       = yyyy
     @loans_term       = yyyy
@@ -480,7 +480,7 @@ private
   def check_term(target, options)
     case target
     # yyyy
-    when 'departments'
+    when 'users', 'departments'
       if options[:term] !~ /^\d{4}$/
         flash[:message] = t('statistic_report.invalid_year')
         return false

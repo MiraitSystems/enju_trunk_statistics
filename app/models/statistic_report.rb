@@ -48,26 +48,33 @@ class StatisticReport < ActiveRecord::Base
     return report.generate
   end
 
+  # 利用者別利用統計
   def self.set_users_report_pdf(report, options ={})
-    # TODO: 値に正しい結果をセットすること
-    # 処理数が多い場合はdelayed_jobに渡すこと
     # term
     report.page.values(:term => options[:term])
     # list
-    users = User.order('library_id ASC, required_role_id DESC')# TODO: 値に正しい結果をセットすること
+    users = User.order('library_id ASC, required_role_id DESC')
     users.each_with_index do |user, num|
       report.page.list(:list).add_row do |row|
         row.item('library').value(user.library.display_name) 
         row.item('role').value(user.required_role.display_name)
         row.item('full_name').value(user.patron.full_name)
         row.item('username').value(user.username)
-        #user.checkouts.where()
-        1.upto(12) do |cnt|
-          row.item("checkout#{cnt}").value('0') #TODO
-          row.item("reserve#{cnt}").value('0')  #TODO
+        checkoutall_cnt = 0
+        reserveall_cnt  = 0
+        1.upto(12) do |month|
+          yyyymm = "#{month > 3 ? options[:term] : options[:term].to_i + 1}#{"%02d" % month}"
+          start_at = Time.zone.parse("#{yyyymm}01").beginning_of_month
+          end_at   = Time.zone.parse("#{yyyymm}31").end_of_month
+          checkout_cnt = user.checkouts.where("checked_at >= '#{start_at}' AND checked_at <= '#{end_at}'").count
+          reserve_cnt  = user.reserves.where("created_at >= '#{start_at}' AND created_at <= '#{end_at}'").count
+          row.item("checkout#{month}").value(checkout_cnt) 
+          row.item("reserve#{month}").value(reserve_cnt)
+          checkoutall_cnt = checkoutall_cnt + checkout_cnt
+          reserveall_cnt  = reserveall_cnt  + reserve_cnt
         end
-        row.item("checkoutall").value('0')      #TODO
-        row.item("reserveall").value('0')       #TODO
+        row.item("checkoutall").value(checkoutall_cnt)
+        row.item("reserveall").value(reserveall_cnt)
         # layout
         row.item('role_line').show unless user.required_role_id == users[num + 1].try(:required_role).try(:id) 
         unless user.library_id == users[num + 1].try(:library).try(:id)
