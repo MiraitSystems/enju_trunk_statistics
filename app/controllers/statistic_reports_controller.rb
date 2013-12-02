@@ -16,9 +16,10 @@ class StatisticReportsController < ApplicationController
   def get_report 
     target = params[:type]
     case target
-    when 'yearly'      then options  = { start_at: params[:yearly_start_at], end_at: params[:yearly_end_at] }
-    when 'users'       then options  = { term: params[:users_term] }
-    when 'departments' then options  = { term: params[:department_term] }
+    when 'yearly'         then options  = { start_at: params[:yearly_start_at], end_at: params[:yearly_end_at] }
+    when 'users'          then options  = { term: params[:users_term] }
+    when 'departments'    then options  = { term: params[:department_term] }
+    when 'manifestations' then options  = { term: params[:manifestations_term] }
     end 
 
     if check_term(target, options)
@@ -454,16 +455,17 @@ private
   def prepare_options(params = {})
     # set yyyy
     yyyy = Time.zone.now.years_ago(1).strftime("%Y")
-    @year             = yyyy 
-    @yearly_start_at  = params[:yearly_start_at] || yyyy
-    @yearly_end_at    = params[:yearly_end_at]   || yyyy
-    @items_year       = yyyy
-    @users_term       = params[:users_term]      || yyyy
-    @departments_year = params[:department_term] || yyyy
-    @inout_term       = yyyy
-    @loans_term       = yyyy
-    @group_term       = yyyy
-    @dep_term         = yyyy
+    @year                = yyyy 
+    @yearly_start_at     = params[:yearly_start_at]     || yyyy
+    @yearly_end_at       = params[:yearly_end_at]       || yyyy
+    @items_year          = yyyy
+    @users_term          = params[:users_term]          || yyyy
+    @departments_term    = params[:department_term]     || yyyy
+    @manifestations_term = params[:manifestations_term] || yyyy
+    @inout_term          = yyyy
+    @loans_term          = yyyy
+    @group_term          = yyyy
+    @dep_term            = yyyy
     # set yyyymm
     yyyymm = Time.zone.now.months_ago(1).strftime("%Y%m")
     @month = yyyymm
@@ -480,7 +482,7 @@ private
   def check_term(target, options)
     case target
     # yyyy
-    when 'users', 'departments'
+    when 'users', 'manifestations', 'departments'
       if options[:term] !~ /^\d{4}$/
         flash[:message] = t('statistic_report.invalid_year')
         return false

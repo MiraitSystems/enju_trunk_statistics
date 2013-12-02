@@ -1,25 +1,5 @@
 class StatisticReport < ActiveRecord::Base
   def self.create_file(target, type, options = {})
-=begin
-    raise "invalid parameter: no path" if out_dir.nil? || out_dir.length < 1
-    tsv_file = out_dir + "item_register_#{type}.tsv"
-    pdf_file = out_dir + "item_register_#{type}.pdf"
-    logger.info "output item_register_#{type} tsv: #{tsv_file} pdf: #{pdf_file}"
-    # create output path
-    FileUtils.mkdir_p(out_dir) unless FileTest.exist?(out_dir)
-    # get item
-    if type == 'all'
-      @items = Item.order("bookstore_id DESC, acquired_at ASC, item_identifier ASC").all
-    else
-      @items = Item.joins(:manifestation).where(["manifestations.manifestation_type_id in (?)", ManifestationType.type_ids(type)]).order("items.bookstore_id DESC, items.acquired_at ASC, items.item_identifier ASC").all
-    end
-    # make tsv
-    make_item_register_tsv(tsv_file, @items) if file_type.nil? || file_type == "tsv"
-    # make pdf
-    make_item_register_pdf(pdf_file, @items, "item_register_#{type}") if file_type.nil? || file_type == "pdf"=
-=end
-
-#    return true
     if type == 'pdf'
       file = create_statistic_report_pdf(target, options)
     else
@@ -39,13 +19,73 @@ class StatisticReport < ActiveRecord::Base
     report.page.values(:date => Time.now)
     # set date
     case target
-    when 'yearly'      then set_yearly_report_pdf(report, options) 
-    when 'montly'      then logger.info '###' #TODO
-    when 'daily'       then logger.info '###' #TODO
-    when 'users'       then set_users_report_pdf(report, options)
-    when 'departments' then set_departments_report_pdf(report, options) 
+    when 'yearly'         then set_yearly_report_pdf(report, options) 
+    when 'montly'         then logger.info '###' #TODO
+    when 'daily'          then logger.info '###' #TODO
+    when 'users'          then set_users_report_pdf(report, options)
+    when 'departments'    then set_departments_report_pdf(report, options) 
+    when 'manifestations' then set_manifestations_report_pdf(report, options)
     end
     return report.generate
+  end
+
+  # 資料別利用統計
+  # TODO: 図書館ごとの統計は未対応
+  def self.set_manifestations_report_pdf(report, options)
+    # term
+    report.page.values(:term => options[:term])
+    # list
+    manifestations = Manifestation.without_master.order('jpn_or_foreign ASC, manifestation_type_id ASC, ndc ASC, original_title ASC') 
+    manifestations.each_with_index do |manifestation, num|
+      report.page.list(:list).add_row do |row|
+        row.item('jpn_or_foreign').value(Manifestation::JPN_OR_FOREIGN.invert[manifestation.jpn_or_foreign] || I18n.t('jpn_or_foreign.other'))
+        row.item('manifestation_type').value(manifestation.manifestation_type.display_name)
+        row.item('ndc').value(manifestation.ndc)
+        row.item('title').value(manifestation.original_title)
+        checkoutall_cnt = 0
+        reserveall_cnt = 0
+        1.upto(12) do |month|
+          yyyymm = "#{month > 3 ? options[:term] : options[:term].to_i + 1}#{"%02d" % month}"
+          start_at = Time.zone.parse("#{yyyymm}01").beginning_of_month
+          end_at   = Time.zone.parse("#{yyyymm}31").end_of_month
+          checkout_cnt = manifestation.items.inject(0) do |sum, item| 
+            sum += Checkout.where("item_id = #{item.id} AND checked_at >= '#{start_at}' AND checked_at <= '#{end_at}'").count
+          end
+          reserve_cnt = Reserve.where("manifestation_id = #{manifestation.id} AND created_at >= '#{start_at}' AND created_at <= '#{end_at}'").count
+          row.item("checkout#{month}").value(checkout_cnt)
+          row.item("reserve#{month}").value(reserve_cnt)
+          checkoutall_cnt += checkout_cnt
+          reserveall_cnt  += reserve_cnt
+        end
+        row.item("checkoutall").value(checkoutall_cnt)
+        row.item("reserveall").value(reserveall_cnt)
+        # layout
+        if manifestation.jpn_or_foreign == manifestations[num - 1].try(:jpn_or_foreign)
+          row.item('jpn_or_foreign').hide
+          if manifestation.manifestation_type == manifestations[num - 1].try(:manifestation_type)
+            row.item('manifestation_type').hide 
+            if manifestation.ndc == manifestations[num - 1].try(:ndc)
+              row.item('ndc').hide 
+              if manifestation.original_title == manifestations[num - 1].try(:original_title)
+                row.item('title').hide
+              end
+            end
+          end
+        end
+        if manifestation.jpn_or_foreign == manifestations[num + 1].try(:jpn_or_foreign)
+          row.item('jpn_or_foreign_line').hide 
+          if manifestation.manifestation_type == manifestations[num + 1].try(:manifestation_type)
+            row.item('manifestation_type_line').hide
+            if manifestation.ndc == manifestations[num + 1].try(:ndc)
+              row.item('ndc_line').hide
+              if manifestation.original_title == manifestations[num - 1].try(:original_title)
+                row.item('title_line').show
+              end
+            end
+          end
+        end
+      end
+    end
   end
 
   # 利用者別利用統計
