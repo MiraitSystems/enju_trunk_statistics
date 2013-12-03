@@ -1,4 +1,254 @@
 class StatisticReport < ActiveRecord::Base
+  # 要求された書式で統計を生成する
+  # -----
+  # output.result_type: 生成結果のタイプ
+  # output.data: 生成結果のデータ
+  # output.job_name: 後で処理する際のジョブ名(result_typeが:delayedのとき)
+  def self.generate_report(target, type, current_user, options = {}, &block)
+    get_total = proc do
+      case target
+      when 'users'          then User.count
+      when 'manifestations' then Manifestation.without_master.count
+      when 'yearly'
+        Statistic.where(
+          "data_type IN ('121', '133') 
+            AND yyyymm >= #{options[:start_at]}04 
+            AND yyyymm <= #{options[:end_at].to_i + 1}03"
+        ).count
+      when 'departments'
+        Statistic.where(
+          "data_type IN ('122', '133') 
+            AND department_id != 0 
+            AND yyyymm >= #{options[:term]}04 
+            AND yyyymm <= #{options[:term].to_i + 1}03"
+        ).count
+      else 0
+      end
+    end
+    # 処理数が指定件数以上のとき delayed job に処理を渡す
+    threshold ||= Setting.background_job.threshold.export rescue nil
+    if threshold and threshold > 0 and get_total.call > threshold
+      job_name = GenerateStatisticReportJob.generate_job_name
+      Delayed::Job.enqueue GenerateStatisticReportJob.new(job_name, target, type, current_user, options)
+      output = OpenStruct.new
+      output.result_type = :delayed
+      output.job_name    = job_name
+      block.call(output)
+      return
+    end
+    generate_report_internal(target, type, options, &block)
+  end
+
+  def self.generate_report_internal(target, type, options = {}, &block)
+    output = OpenStruct.new
+    output.result_type = :data
+    output.filename    = "#{target}_report.#{type}"
+    
+    method = "create_report_#{type}"
+    case type
+    when 'pdf' then result = output.__send__("#{output.result_type}=", self.__send__(method, target, options).generate)
+    when 'tsv' then result = nil # TODO: TSVの処理を書く
+    end
+    block.call(output)
+  end
+
+  def self.create_report_pdf(target, options = {})
+    # pdf処理 重複部分の値をセット
+    report = ThinReports::Report.new :layout => get_layout_path("#{target}_report")
+    report.events.on :page_create do |e| e.page.item(:page).value(e.page.no) end
+    report.events.on :generate do |e| 
+      e.pages.each do |page| page.item(:total).value(e.report.page_count) end
+    end
+    report.start_new_page
+    report.page.values(:date => Time.now)
+    # pdf処理 独自部分の値をセット
+    case target
+    when 'yearly'         then set_yearly_report_pdf(report, options) 
+    when 'users'          then set_users_report_pdf(report, options)
+    when 'departments'    then set_departments_report_pdf(report, options) 
+    when 'manifestations' then set_manifestations_report_pdf(report, options)
+    end
+    return report
+  end
+
+  # 資料別利用統計
+  # TODO: 図書館ごとの統計は未対応
+  def self.set_manifestations_report_pdf(report, options)
+    # term
+    report.page.values(:term => options[:term])
+    # list
+    manifestations = Manifestation.without_master.order('jpn_or_foreign ASC, manifestation_type_id ASC, ndc ASC, original_title ASC') 
+    manifestations.each_with_index do |manifestation, num|
+      report.page.list(:list).add_row do |row|
+        row.item('jpn_or_foreign').value(Manifestation::JPN_OR_FOREIGN.invert[manifestation.jpn_or_foreign] || I18n.t('jpn_or_foreign.other'))
+        row.item('manifestation_type').value(manifestation.manifestation_type.display_name)
+        row.item('ndc').value(manifestation.ndc)
+        row.item('title').value(manifestation.original_title)
+        checkoutall_cnt = 0
+        reserveall_cnt = 0
+        1.upto(12) do |month|
+          yyyymm = "#{month > 3 ? options[:term] : options[:term].to_i + 1}#{"%02d" % month}"
+          start_at = Time.zone.parse("#{yyyymm}01").beginning_of_month
+          end_at   = Time.zone.parse("#{yyyymm}31").end_of_month
+          checkout_cnt = manifestation.items.inject(0) do |sum, item| 
+            sum += Checkout.where("item_id = #{item.id} AND checked_at >= '#{start_at}' AND checked_at <= '#{end_at}'").count
+          end
+          reserve_cnt = Reserve.where("manifestation_id = #{manifestation.id} AND created_at >= '#{start_at}' AND created_at <= '#{end_at}'").count
+          row.item("checkout#{month}").value(checkout_cnt)
+          row.item("reserve#{month}").value(reserve_cnt)
+          checkoutall_cnt += checkout_cnt
+          reserveall_cnt  += reserve_cnt
+        end
+        row.item("checkoutall").value(checkoutall_cnt)
+        row.item("reserveall").value(reserveall_cnt)
+        # layout
+        if manifestation.jpn_or_foreign == manifestations[num - 1].try(:jpn_or_foreign)
+          row.item('jpn_or_foreign').hide
+          if manifestation.manifestation_type == manifestations[num - 1].try(:manifestation_type)
+            row.item('manifestation_type').hide 
+            if manifestation.ndc == manifestations[num - 1].try(:ndc)
+              row.item('ndc').hide 
+              if manifestation.original_title == manifestations[num - 1].try(:original_title)
+                row.item('title').hide
+              end
+            end
+          end
+        end
+        if manifestation.jpn_or_foreign == manifestations[num + 1].try(:jpn_or_foreign)
+          row.item('jpn_or_foreign_line').hide 
+          if manifestation.manifestation_type == manifestations[num + 1].try(:manifestation_type)
+            row.item('manifestation_type_line').hide
+            if manifestation.ndc == manifestations[num + 1].try(:ndc)
+              row.item('ndc_line').hide
+              if manifestation.original_title == manifestations[num - 1].try(:original_title)
+                row.item('title_line').show
+              end
+            end
+          end
+        end
+      end
+    end
+ end
+
+  # 利用者別利用統計
+  def self.set_users_report_pdf(report, options ={})
+    # term
+    report.page.values(:term => options[:term])
+    # list
+    users = User.order('library_id ASC, required_role_id DESC')
+    users.each_with_index do |user, num|
+      report.page.list(:list).add_row do |row|
+        row.item('library').value(user.library.display_name) 
+        row.item('role').value(user.required_role.display_name)
+        row.item('full_name').value(user.patron.full_name)
+        row.item('username').value(user.username)
+        checkoutall_cnt = 0
+        reserveall_cnt  = 0
+        1.upto(12) do |month|
+          yyyymm = "#{month > 3 ? options[:term] : options[:term].to_i + 1}#{"%02d" % month}"
+          start_at = Time.zone.parse("#{yyyymm}01").beginning_of_month
+          end_at   = Time.zone.parse("#{yyyymm}31").end_of_month
+          checkout_cnt = user.checkouts.where("checked_at >= '#{start_at}' AND checked_at <= '#{end_at}'").count
+          reserve_cnt  = user.reserves.where("created_at >= '#{start_at}' AND created_at <= '#{end_at}'").count
+          row.item("checkout#{month}").value(checkout_cnt) 
+          row.item("reserve#{month}").value(reserve_cnt)
+          checkoutall_cnt = checkoutall_cnt + checkout_cnt
+          reserveall_cnt  = reserveall_cnt  + reserve_cnt
+        end
+        row.item("checkoutall").value(checkoutall_cnt)
+        row.item("reserveall").value(reserveall_cnt)
+        # layout
+        row.item('role_line').show unless user.required_role_id == users[num + 1].try(:required_role).try(:id) 
+        unless user.library_id == users[num + 1].try(:library).try(:id)
+          row.item('library_line').show 
+          row.item('role_line').show
+        end
+        if user.library_id == users[num - 1].try(:library).try(:id)  
+          row.item('library').hide if user.library_id == users[num - 1].try(:library).try(:id)
+          row.item('role').hide if user.required_role_id == users[num - 1].try(:required_role).try(:id)
+        end
+      end
+    end 
+  end
+
+  # 所属別利用統計 checkout: 122 / reserve: 133
+  def self.set_departments_report_pdf(report, options = {})
+    # term
+    report.page.values(:term => options[:term])
+    # list
+    Department.all.each do |department| 
+      report.page.list(:list).add_row do |row|
+        row.item("department").value(department.display_name)
+        checkoutall = 0
+        reserveall  = 0
+        1.upto(12) do |cnt|
+          conditions = {
+            :yyyymm        => "#{cnt > 3 ? options[:term] : options[:term].to_i + 1}#{"%02d" % cnt}",
+            :department_id => department.id
+          }
+          checkout = Statistic.where(conditions.merge(:data_type => 122, :option => 1)).first.value rescue 0
+          reserve  = Statistic.where(conditions.merge(:data_type => 133)).first.value rescue 0
+          row.item("checkout#{cnt}").value(checkout)
+          row.item("reserve#{cnt}").value(reserve)
+          checkoutall = checkoutall + checkout
+          reserveall  = reserveall  + reserve
+        end
+        row.item("checkoutall").value(checkoutall)
+        row.item("reserveall").value(reserveall) 
+      end
+    end
+  end
+
+  # 年別利用統計 checkout: 121 / reserve: 133 
+  def self.set_yearly_report_pdf(report, options = {})
+    libraries = Library.real.all
+    # term
+    report.page.values(
+      :year_start_at => options[:start_at], 
+      :year_end_at   => options[:end_at]
+    )
+    # footer
+    report.layout.config.list(:list) do
+      events.on :footer_insert do |e|
+        libraries.each_with_index do |library, num|
+          conditions = "library_id = #{library.id} AND yyyymm >= #{options[:start_at]}04 AND yyyymm <= #{options[:end_at].to_i + 1}03" 
+          checkout_all = Statistic.where(conditions + 'AND data_type = 121').sum(:value)
+          reserve_all  = Statistic.where(conditions + 'AND data_type = 133').sum(:value)
+          e.section.item("checkout_total##{num}").value(checkout_all)
+          e.section.item("reserve_total##{num}").value(reserve_all)
+          # footer layout
+          targets = %w(library_footer_frame library_footer_column_line checkout_total reserve_total)
+          targets.each { |target| e.section.item("#{target}##{num}").show }
+        end
+      end
+    end
+    # header
+    libraries.each_with_index do |library, num|
+      report.page.list(:list).header.item("library##{num}").value(library.display_name)
+      # header layout
+      targets = %w(library_header_frame library_header_column_line
+        library_header_row_line library_header_checkout library_header_reserve)
+      targets.each { |target| report.page.list(:list).header.item("#{target}##{num}").show }
+    end
+    # list data
+    (options[:end_at].to_i - options[:start_at].to_i + 1).times do |cnt|
+      report.page.list(:list).add_row do |row|
+        year = options[:start_at].to_i + cnt
+        row.item(:year).value(year)
+        libraries.each_with_index do |library, num|
+          conditions = "library_id = #{library.id} AND yyyymm >= #{year}04 AND yyyymm <= #{year + 1}03" 
+          checkout = Statistic.where(conditions + 'AND data_type = 121').sum(:value)
+          reserve  = Statistic.where(conditions + 'AND data_type = 133').sum(:value)
+          row.item("checkout##{num}").value(checkout)
+          row.item("reserve##{num}").value(reserve) 
+          #layout
+          targets = %w(library_detail_column_line1 library_detail_column_line2 library_detail_row_line checkout)
+          targets.each { |target| row.item("#{target}##{num}").show }
+        end
+      end
+    end
+  end
+
   def self.get_monthly_report_pdf(term)
     libraries = Library.all
     checkout_types = CheckoutType.all
@@ -11579,5 +11829,45 @@ private
     path = gem_root + "/app/layouts/#{filename}"
     return path
   end
-end
 
+  class GenerateStatisticReportJob
+    include Rails.application.routes.url_helpers
+    include BackgroundJobUtils
+
+    def initialize(name, target, type, user, options)
+      @name     = name
+      @target   = target
+      @type     = type
+      @user     = user
+      @options  = options
+    end
+    attr_accessor :name, :target, :type, :user, :options
+
+    def perform
+      user_file = UserFile.new(user)
+      StatisticReport.generate_report_internal(target, type, options) do |output|
+        io, info = user_file.create(:statisticreport, output.filename)
+        if output.result_type == :path
+          open(output.path) { |io2| FileUtils.copy_stream(io2, io) }
+        else
+          io.print output.data
+        end
+        io.close
+        url = my_account_url(:filename => info[:filename], :category => info[:category], :random => info[:random])
+        message(
+          user,
+          I18n.t('statistic_report.output_job_success_subject', :job_name => name),
+          I18n.t('statistic_report.output_job_success_body', :job_name => name, :url => url)
+        )
+      end
+    rescue => exception
+      message(
+        user,
+        I18n.t('statistic_report.output_job_error_subject', 
+          :job_name => name),
+        I18n.t('statistic_report.output_job_error_body', 
+          :job_name => name, :message => exception.message+exception.backtrace) 
+      )
+    end
+  end
+end

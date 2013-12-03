@@ -2,26 +2,41 @@ class StatisticReportsController < ApplicationController
   before_filter :check_role
 
   def index
-    @year = Time.zone.now.years_ago(1).strftime("%Y")
-    @month = Time.zone.now.months_ago(1).strftime("%Y%m")
-    @t_start_at = Time.zone.now.months_ago(1).beginning_of_month.strftime("%Y%m%d")
-    @t_end_at = Time.zone.now.months_ago(1).end_of_month.strftime("%Y%m%d")
-    @d_start_at = Time.zone.now.months_ago(1).beginning_of_month.strftime("%Y%m%d")
-    @d_end_at = Time.zone.now.months_ago(1).end_of_month.strftime("%Y%m%d")
-    @a_start_at = Time.zone.now.months_ago(1).beginning_of_month.strftime("%Y%m%d")
-    @a_end_at = Time.zone.now.months_ago(1).end_of_month.strftime("%Y%m%d")
-    @items_year = Time.zone.now.years_ago(1).strftime("%Y")
-    @inout_term = Time.zone.now.years_ago(1).strftime("%Y")
-    @loans_term = Time.zone.now.years_ago(1).strftime("%Y")
-    @group_term = Time.zone.now.years_ago(1).strftime("%Y")
-    @dep_term = Time.zone.now.years_ago(1).strftime("%Y")
+    prepare_options(params)
   end
 
-  # check role
-  def check_role
-    unless current_user.try(:has_role?, 'Librarian')
-      access_denied; return
+  #TODO: 重複文が多いのであとでget_reportメソッドに統合すること
+  def get_report
+    target = params[:type]
+    # set term
+    case target
+    when 'yearly'         then options  = { start_at: params[:yearly_start_at].strip, end_at: params[:yearly_end_at].strip }
+    when 'users'          then options  = { term: params[:users_term].strip }
+    when 'departments'    then options  = { term: params[:department_term].strip }
+    when 'manifestations' then options  = { term: params[:manifestations_term].strip }
     end
+    check_term(target, options)
+    # set format
+    type = params[:tsv] ? 'tsv' : 'pdf'
+    StatisticReport.generate_report(target, type, current_user, options) do |output|
+      send_opts = {
+        filename: output.filename,
+        type:     output.mime_type || 'application/octet-stream',
+      }
+      case output.result_type
+      when :path then send_file output.path, send_opts
+      when :data then send_data output.data, send_opts
+      when :delayed
+        flash[:message] = t('statistic_report.output_job_queued', :job_name => output.job_name)
+        redirect_to statistic_reports_path
+      else raise "unknown result type: #{output.result_type.inspect} (bug?)"
+      end
+    end 
+  rescue Exception => e
+    prepare_options(params)
+    flash[:message] = e.message
+    logger.error e.message
+    render :index
   end
 
   def get_monthly_report
@@ -411,7 +426,7 @@ class StatisticReportsController < ApplicationController
       else
         file = StatisticReport.get_departments_daily_pdf(term)
         if file
-          send_data file, :filename => "#{term}_#{Setting.statistic_report.departments}", :type => 'application/pdf', :disposition => 'attachment'       
+          send_data file, :filename => "#{term}_#{Setting.statistic_report.departments_pdf}", :type => 'application/pdf', :disposition => 'attachment'       
         else
           raise
         end
@@ -438,8 +453,48 @@ class StatisticReportsController < ApplicationController
   end
 
 private
+  def prepare_options(params = {})
+    # set yyyy
+    yyyy = Time.zone.now.years_ago(1).strftime("%Y")
+    @year                = yyyy 
+    @yearly_start_at     = params[:yearly_start_at]     || yyyy
+    @yearly_end_at       = params[:yearly_end_at]       || yyyy
+    @items_year          = yyyy
+    @users_term          = params[:users_term]          || yyyy
+    @departments_term    = params[:department_term]     || yyyy
+    @manifestations_term = params[:manifestations_term] || yyyy
+    @inout_term          = yyyy
+    @loans_term          = yyyy
+    @group_term          = yyyy
+    @dep_term            = yyyy
+    # set yyyymm
+    yyyymm = Time.zone.now.months_ago(1).strftime("%Y%m")
+    @month = yyyymm
+    # set yyyymmdd
+    yyyymmdd = Time.zone.now.months_ago(1).beginning_of_month.strftime("%Y%m%d")
+    @t_start_at = yyyymmdd
+    @t_end_at   = yyyymmdd
+    @d_start_at = yyyymmdd
+    @d_end_at   = yyyymmdd
+    @a_start_at = yyyymmdd
+    @a_end_at   = yyyymmdd 
+  end
+
+  def check_term(target, options)
+    case target
+    # yyyy
+    when 'users', 'manifestations', 'departments'
+      raise t('statistic_report.invalid_year') if options[:term] !~ /^\d{4}$/
+    # yyyy - yyyy
+    when 'yearly'
+      if options[:start_at] !~ /^\d{4}$/ or options[:end_at] !~ /^\d{4}$/ or options[:start_at].to_i > options[:end_at].to_i
+        raise t('statistic_report.invalid_year')
+      end
+    end
+  end
+
   def month_term?(term)
-	    begin 
+    begin 
       Time.parse("#{term}01")
       return true
     rescue ArgumentError
@@ -456,4 +511,9 @@ private
     end
   end
 
+  def check_role
+    unless current_user.try(:has_role?, 'Librarian')
+      access_denied; return
+    end
+  end
 end
