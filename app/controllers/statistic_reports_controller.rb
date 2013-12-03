@@ -10,10 +10,10 @@ class StatisticReportsController < ApplicationController
     target = params[:type]
     # set term
     case target
-    when 'yearly'         then options  = { start_at: params[:yearly_start_at], end_at: params[:yearly_end_at] }
-    when 'users'          then options  = { term: params[:users_term] }
-    when 'departments'    then options  = { term: params[:department_term] }
-    when 'manifestations' then options  = { term: params[:manifestations_term] }
+    when 'yearly'         then options  = { start_at: params[:yearly_start_at].strip, end_at: params[:yearly_end_at].strip }
+    when 'users'          then options  = { term: params[:users_term].strip }
+    when 'departments'    then options  = { term: params[:department_term].strip }
+    when 'manifestations' then options  = { term: params[:manifestations_term].strip }
     end
     check_term(target, options)
     # set format
