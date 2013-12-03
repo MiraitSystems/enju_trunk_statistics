@@ -1,32 +1,74 @@
 class StatisticReport < ActiveRecord::Base
-  def self.create_file(target, type, options = {})
-    if type == 'pdf'
-      file = create_statistic_report_pdf(target, options)
-    else
-      # TODO: TSVの処理を書く
+  # 要求された書式で統計を生成する
+  # -----
+  # output.result_type: 生成結果のタイプ
+  # output.data: 生成結果のデータ
+  # output.job_name: 後で処理する際のジョブ名(result_typeが:delayedのとき)
+  def self.generate_report(target, type, current_user, options = {}, &block)
+    get_total = proc do
+      case target
+      when 'users'          then User.count
+      when 'manifestations' then Manifestation.without_master.count
+      when 'yearly'
+        Statistic.where(
+          "data_type IN ('121', '133') 
+            AND yyyymm >= #{options[:start_at]}04 
+            AND yyyymm <= #{options[:end_at].to_i + 1}03"
+        ).count
+      when 'departments'
+        Statistic.where(
+          "data_type IN ('122', '133') 
+            AND department_id != 0 
+            AND yyyymm >= #{options[:term]}04 
+            AND yyyymm <= #{options[:term].to_i + 1}03"
+        ).count
+      else 0
+      end
     end
-    return file
+    # 処理数が指定件数以上のとき delayed job に処理を渡す
+    threshold ||= Setting.background_job.threshold.export rescue nil
+    if threshold and threshold > 0 and get_total.call > threshold
+      job_name = GenerateStatisticReportJob.generate_job_name
+      Delayed::Job.enqueue GenerateStatisticReportJob.new(job_name, target, type, current_user, options)
+      output = OpenStruct.new
+      output.result_type = :delayed
+      output.job_name    = job_name
+      block.call(output)
+      return
+    end
+    generate_report_internal(target, type, options, &block)
   end
 
-  def self.create_statistic_report_pdf(target, options = {})
+  def self.generate_report_internal(target, type, options = {}, &block)
+    output = OpenStruct.new
+    output.result_type = :data
+    output.filename    = "#{target}_report.#{type}"
+    
+    method = "create_report_#{type}"
+    case type
+    when 'pdf' then result = output.__send__("#{output.result_type}=", self.__send__(method, target, options).generate)
+    when 'tsv' then result = nil # TODO: TSVの処理を書く
+    end
+    block.call(output)
+  end
+
+  def self.create_report_pdf(target, options = {})
+    # pdf処理 重複部分の値をセット
     report = ThinReports::Report.new :layout => get_layout_path("#{target}_report")
-    # set page
     report.events.on :page_create do |e| e.page.item(:page).value(e.page.no) end
     report.events.on :generate do |e| 
       e.pages.each do |page| page.item(:total).value(e.report.page_count) end
     end
     report.start_new_page
     report.page.values(:date => Time.now)
-    # set date
+    # pdf処理 独自部分の値をセット
     case target
     when 'yearly'         then set_yearly_report_pdf(report, options) 
-    when 'montly'         then logger.info '###' #TODO
-    when 'daily'          then logger.info '###' #TODO
     when 'users'          then set_users_report_pdf(report, options)
     when 'departments'    then set_departments_report_pdf(report, options) 
     when 'manifestations' then set_manifestations_report_pdf(report, options)
     end
-    return report.generate
+    return report
   end
 
   # 資料別利用統計
@@ -86,7 +128,7 @@ class StatisticReport < ActiveRecord::Base
         end
       end
     end
-  end
+ end
 
   # 利用者別利用統計
   def self.set_users_report_pdf(report, options ={})
@@ -11787,5 +11829,45 @@ private
     path = gem_root + "/app/layouts/#{filename}"
     return path
   end
-end
 
+  class GenerateStatisticReportJob
+    include Rails.application.routes.url_helpers
+    include BackgroundJobUtils
+
+    def initialize(name, target, type, user, options)
+      @name     = name
+      @target   = target
+      @type     = type
+      @user     = user
+      @options  = options
+    end
+    attr_accessor :name, :target, :type, :user, :options
+
+    def perform
+      user_file = UserFile.new(user)
+      StatisticReport.generate_report_internal(target, type, options) do |output|
+        io, info = user_file.create(:statisticreport, output.filename)
+        if output.result_type == :path
+          open(output.path) { |io2| FileUtils.copy_stream(io2, io) }
+        else
+          io.print output.data
+        end
+        io.close
+        url = my_account_url(:filename => info[:filename], :category => info[:category], :random => info[:random])
+        message(
+          user,
+          I18n.t('statistic_report.output_job_success_subject', :job_name => name),
+          I18n.t('statistic_report.output_job_success_body', :job_name => name, :url => url)
+        )
+      end
+    rescue => exception
+      message(
+        user,
+        I18n.t('statistic_report.output_job_error_subject', 
+          :job_name => name),
+        I18n.t('statistic_report.output_job_error_body', 
+          :job_name => name, :message => exception.message+exception.backtrace) 
+      )
+    end
+  end
+end

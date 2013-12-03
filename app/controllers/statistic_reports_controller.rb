@@ -5,37 +5,38 @@ class StatisticReportsController < ApplicationController
     prepare_options(params)
   end
 
-  # check role
-  def check_role
-    unless current_user.try(:has_role?, 'Librarian')
-      access_denied; return
-    end
-  end
-
   #TODO: 重複文が多いのであとでget_reportメソッドに統合すること
-  def get_report 
+  def get_report
     target = params[:type]
+    # set term
     case target
     when 'yearly'         then options  = { start_at: params[:yearly_start_at], end_at: params[:yearly_end_at] }
     when 'users'          then options  = { term: params[:users_term] }
     when 'departments'    then options  = { term: params[:department_term] }
     when 'manifestations' then options  = { term: params[:manifestations_term] }
-    end 
-
-    if check_term(target, options)
-      # send data
-      if params[:tsv]
-        #TODO TSVの処理を書く
-      else
-        # TODO: file nameどうにかする
-        #send_data StatisticReport.create_file(target, 'pdf', options), :file_name => "#{filename}.pdf", :type => 'application/pdf'
-        # file名はいらない？
-        send_data StatisticReport.create_file(target, 'pdf', options), :file_name => "#{target}_report.pdf", :type => 'application/pdf'
-      end
-    else
-      prepare_options(params)
-      render :index
     end
+    check_term(target, options)
+    # set format
+    type = params[:tsv] ? 'tsv' : 'pdf'
+    StatisticReport.generate_report(target, type, current_user, options) do |output|
+      send_opts = {
+        filename: output.filename,
+        type:     output.mime_type || 'application/octet-stream',
+      }
+      case output.result_type
+      when :path then send_file output.path, send_opts
+      when :data then send_data output.data, send_opts
+      when :delayed
+        flash[:message] = t('statistic_report.output_job_queued', :job_name => output.job_name)
+        redirect_to statistic_reports_path
+      else raise "unknown result type: #{output.result_type.inspect} (bug?)"
+      end
+    end 
+  rescue Exception => e
+    prepare_options(params)
+    flash[:message] = e.message
+    logger.error e.message
+    render :index
   end
 
   def get_monthly_report
@@ -483,18 +484,13 @@ private
     case target
     # yyyy
     when 'users', 'manifestations', 'departments'
-      if options[:term] !~ /^\d{4}$/
-        flash[:message] = t('statistic_report.invalid_year')
-        return false
-      end
+      raise t('statistic_report.invalid_year') if options[:term] !~ /^\d{4}$/
     # yyyy - yyyy
     when 'yearly'
       if options[:start_at] !~ /^\d{4}$/ or options[:end_at] !~ /^\d{4}$/ or options[:start_at].to_i > options[:end_at].to_i
-        flash[:message] = t('statistic_report.invalid_year')
-        return false
+        raise t('statistic_report.invalid_year')
       end
     end
-    true
   end
 
   def month_term?(term)
@@ -512,6 +508,12 @@ private
       return true
     rescue ArgumentError
       return false
+    end
+  end
+
+  def check_role
+    unless current_user.try(:has_role?, 'Librarian')
+      access_denied; return
     end
   end
 end
