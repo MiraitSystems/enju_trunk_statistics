@@ -2591,101 +2591,57 @@ class StatisticReport < ActiveRecord::Base
           end
           report.page.list(:list).header.item("column#13").value(I18n.t('statistic_report.sum'))
         end
-        # items all libraries
-        data_type = 211
-        report.page.list(:list).add_row do |row|
-          row.item(:type).value(I18n.t('statistic_report.items'))
-          row.item(:library).value(I18n.t('statistic_report.all_library'))
-          if start_date != 27
-            13.times do |t|
-              value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 211, :library_id => 0).no_condition.first.value rescue 0
-              row.item("value##{t+1}").value(to_format(value))
-            end
-          else
-            num_for_last_page.times do |t|
-              value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 211, :library_id => 0).no_condition.first.value rescue 0
-              row.item("value##{t+1}").value(to_format(value))
-              row.item("value#13").value(to_format(value)) if t == num_for_last_page - 1
-            end
-          end
-          row.item(:library_line).show
-        end
-        # items each libraries
-        libraries.each do |library|
+
+        unless SystemConfiguration.get("statistic_report.daily_report.not_use_items")
+          # items all libraries
+          data_type = 211
           report.page.list(:list).add_row do |row|
-            row.item(:library).value(library.display_name)
+            row.item(:type).value(I18n.t('statistic_report.items'))
+            row.item(:library).value(I18n.t('statistic_report.all_library'))
             if start_date != 27
               13.times do |t|
-                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 211, :library_id => library.id).no_condition.first.value rescue 0
+                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 211, :library_id => 0).no_condition.first.value rescue 0
                 row.item("value##{t+1}").value(to_format(value))
               end
             else
               num_for_last_page.times do |t|
-                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 211, :library_id => library.id).no_condition.first.value rescue 0
+                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 211, :library_id => 0).no_condition.first.value rescue 0
                 row.item("value##{t+1}").value(to_format(value))
                 row.item("value#13").value(to_format(value)) if t == num_for_last_page - 1
               end
             end
             row.item(:library_line).show
-            line(row) if library == libraries.last
+          end
+          # items each libraries
+          libraries.each do |library|
+            report.page.list(:list).add_row do |row|
+              row.item(:library).value(library.display_name)
+              if start_date != 27
+                13.times do |t|
+                  value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 211, :library_id => library.id).no_condition.first.value rescue 0
+                  row.item("value##{t+1}").value(to_format(value))
+                end
+              else
+                num_for_last_page.times do |t|
+                  value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 211, :library_id => library.id).no_condition.first.value rescue 0
+                  row.item("value##{t+1}").value(to_format(value))
+                  row.item("value#13").value(to_format(value)) if t == num_for_last_page - 1
+                end
+              end
+              row.item(:library_line).show
+              line(row) if library == libraries.last
+            end
           end
         end
-        # checkout users all libraries
-        data_type = 222
-        report.page.list(:list).add_row do |row|
-          row.item(:type).value(I18n.t('statistic_report.checkout_users'))
-          row.item(:library).value(I18n.t('statistic_report.all_library'))
-          if start_date != 27
-            13.times do |t|
-              value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => 0).no_condition.first.value rescue 0
-              row.item("value##{t+1}").value(to_format(value))
-            end
-          else
-            num_for_last_page.times do |t|
-              value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => 0).no_condition.first.value rescue 0
-              row.item("value##{t+1}").value(to_format(value))
-            end
-            sum = 0
-            datas = Statistic.where(:yyyymm => term, :data_type => data_type, :library_id => 0).no_condition
-            datas.each do |data|
-              sum = sum + data.value
-            end
-            row.item("value#13").value(sum)
-          end
-        end
-        # each user type
-        5.downto(1) do |type|
+        unless SystemConfiguration.get("statistic_report.daily_report.not_use_checkout_users")
+          # checkout users all libraries
+          data_type = 222
           report.page.list(:list).add_row do |row|
-            row.item(:option).value(I18n.t("statistic_report.user_type_#{type}"))
+            row.item(:type).value(I18n.t('statistic_report.checkout_users'))
+            row.item(:library).value(I18n.t('statistic_report.all_library'))
             if start_date != 27
               13.times do |t|
-                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => 0, :option => 0, :user_type => type).first.value rescue 0
-                row.item("value##{t+1}").value(to_format(value))
-              end
-            else
-              num_for_last_page.times do |t|
-                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => 0, :option => 0, :user_type => type).first.value rescue 0
-                row.item("value##{t+1}").value(to_format(value))
-              end
-              sum = 0
-              datas = Statistic.where(["yyyymm = ? AND data_type = ? AND library_id = ? AND option = 0 AND user_type = ? ", term, data_type, 0, type])
-              datas.each do |data|
-                sum += data.value                               
-              end
-              row.item("value#13").value(sum)
-            end
-            if type == 1
-              line_for_libraries(row)
-            end
-          end
-        end
-        # checkout users each libraries
-        libraries.each do |library|
-          report.page.list(:list).add_row do |row|
-            row.item(:library).value(library.display_name)
-            if start_date != 27
-              13.times do |t|
-                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => library.id).no_condition.first.value rescue 0
+                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => 0).no_condition.first.value rescue 0
                 row.item("value##{t+1}").value(to_format(value))
               end
             else
@@ -2694,496 +2650,598 @@ class StatisticReport < ActiveRecord::Base
                 row.item("value##{t+1}").value(to_format(value))
               end
               sum = 0
-              datas = Statistic.where(:yyyymm => term, :data_type => data_type, :library_id => library.id).no_condition
+              datas = Statistic.where(:yyyymm => term, :data_type => data_type, :library_id => 0).no_condition
               datas.each do |data|
                 sum = sum + data.value
               end
               row.item("value#13").value(sum)
             end
+            row.item(:library_line).show if SystemConfiguration.get("statistic_report.daily_report.checkout_users_not_use_types")
           end
           # each user type
-          5.downto(1) do |type|
-            report.page.list(:list).add_row do |row|
-              row.item(:option).value(I18n.t("statistic_report.user_type_#{type}"))
-              if start_date != 27
-                13.times do |t|
-                  value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => library.id, :option =>0, :user_type => type).first.value rescue 0
-                  row.item("value##{t+1}").value(to_format(value))
-                end
-              else
-                num_for_last_page.times do |t|
-                  value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => library.id, :option => 0, user_type => type).first.value rescue 0
-                  row.item("value##{t+1}").value(to_format(value))
-                end
-                sum = 0
-                datas = Statistic.where(["yyyymm = ? AND data_type = ? AND library_id = ? AND option = 0 AND user_type = ?", term, data_type, library.id, type])
-                datas.each do |data|
-                  sum += data.value                               
-                end
-                row.item("value#13").value(sum)
-              end
-              if type == 1
-                if library == libraries.last
-                  line(row) if library == libraries.last
+          unless SystemConfiguration.get("statistic_report.daily_report.checkout_users_not_use_types")
+            5.downto(1) do |type|
+              report.page.list(:list).add_row do |row|
+                row.item(:option).value(I18n.t("statistic_report.user_type_#{type}"))
+                if start_date != 27
+                  13.times do |t|
+                    value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => 0, :option => 0, :user_type => type).first.value rescue 0
+                    row.item("value##{t+1}").value(to_format(value))
+                  end
                 else
+                  num_for_last_page.times do |t|
+                    value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => 0, :option => 0, :user_type => type).first.value rescue 0
+                    row.item("value##{t+1}").value(to_format(value))
+                  end
+                  sum = 0
+                  datas = Statistic.where(["yyyymm = ? AND data_type = ? AND library_id = ? AND option = 0 AND user_type = ? ", term, data_type, 0, type])
+                  datas.each do |data|
+                    sum += data.value                               
+                  end
+                  row.item("value#13").value(sum)
+                end
+                if type == 1
                   line_for_libraries(row)
                 end
               end
             end
           end
-        end
-
-        # checkout items all libraries
-        data_type = 221
-        report.page.list(:list).add_row do |row|
-          row.item(:type).value(I18n.t('statistic_report.checkout_items'))
-          row.item(:library).value(I18n.t('statistic_report.all_library'))
-          if start_date != 27
-            13.times do |t|
-              value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => 0).no_condition.first.value rescue 0
-              row.item("value##{t+1}").value(to_format(value))
-            end
-          else
-            num_for_last_page.times do |t|
-              value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => 0).no_conditionfirst.value rescue 0
-              row.item("value##{t+1}").value(to_format(value))
-            end
-            sum = 0
-            datas = Statistic.where(:yyyymm => term, :data_type => data_type, :library_id => 0).no_condition
-            datas.each do |data|
-              sum = sum + data.value
-            end
-            row.item("value#13").value(sum)
-          end
-        end
-        3.times do |i|
-          report.page.list(:list).add_row do |row|
-            row.item(:option).value(I18n.t("statistic_report.item_type_#{i+1}"))
-            if start_date != 27
-              13.times do |t|
-                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => 0, :option => i+1).first.value rescue 0
-                row.item("value##{t+1}").value(to_format(value))
-              end
-            else
-              num_for_last_page.times do |t|
-                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => 0, :option => i+1).first.value rescue 0
-                row.item("value##{t+1}").value(to_format(value))
-              end
-              sum = 0
-              datas = Statistic.where(:yyyymm => term, :data_type => data_type, :library_id => 0, :option => i+1)
-              datas.each do |data|
-                sum = sum + data.value
-              end
-              row.item("value#13").value(sum)
-            end
-            line_for_libraries(row) if i == 2
-          end
-        end
-        
-        # checkout items each libraries
-        libraries.each do |library|
-          report.page.list(:list).add_row do |row|
-            row.item(:library).value(library.display_name)
-            if start_date != 27
-              13.times do |t|
-                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => library.id).no_condition.first.value rescue 0
-                row.item("value##{t+1}").value(to_format(value))
-              end
-            else
-              num_for_last_page.times do |t|
-                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => library.id).no_condition.first.value rescue 0
-                row.item("value##{t+1}").value(to_format(value))
-              end
-              sum = 0
-              datas = Statistic.where(:yyyymm => term, :data_type => data_type, :library_id => library.id).no_condition
-              datas.each do |data|
-                sum = sum + data.value
-              end
-              row.item("value#13").value(sum)
-            end
-          end
-          3.times do |i|
+          # checkout users each libraries
+          libraries.each do |library|
             report.page.list(:list).add_row do |row|
-              row.item(:option).value(I18n.t("statistic_report.item_type_#{i+1}"))
+            row.item(:library).value(library.display_name)
               if start_date != 27
                 13.times do |t|
-                  value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => library.id, :option => i+1).first.value rescue 0
+                  value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => library.id).no_condition.first.value rescue 0
                   row.item("value##{t+1}").value(to_format(value))
                 end
               else
                 num_for_last_page.times do |t|
-                  value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => library.id, :option => i+1).first.value rescue 0
+                  value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => 0).no_condition.first.value rescue 0
                   row.item("value##{t+1}").value(to_format(value))
                 end
                 sum = 0
-                datas = Statistic.where(:yyyymm => term, :data_type => data_type, :library_id => library.id, :option => i+1)
+                datas = Statistic.where(:yyyymm => term, :data_type => data_type, :library_id => library.id).no_condition
                 datas.each do |data|
                   sum = sum + data.value
                 end
                 row.item("value#13").value(sum)
               end
-              if i == 2
+              if SystemConfiguration.get("statistic_report.daily_report.checkout_users_not_use_types")
                 if library == libraries.last
                   line(row)
                 else
-                  line_for_libraries(row)
+                  row.item(:library_line).show
+                end
+              end
+            end
+            unless SystemConfiguration.get("statistic_report.daily_report.checkout_users_not_use_types")
+              # each user type
+              5.downto(1) do |type|
+                report.page.list(:list).add_row do |row|
+                  row.item(:option).value(I18n.t("statistic_report.user_type_#{type}"))
+                  if start_date != 27
+                    13.times do |t|
+                      value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => library.id, :option =>0, :user_type => type).first.value rescue 0
+                      row.item("value##{t+1}").value(to_format(value))
+                    end
+                  else
+                    num_for_last_page.times do |t|
+                      value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => library.id, :option => 0, user_type => type).first.value rescue 0
+                      row.item("value##{t+1}").value(to_format(value))
+                    end
+                    sum = 0
+                    datas = Statistic.where(["yyyymm = ? AND data_type = ? AND library_id = ? AND option = 0 AND user_type = ?", term, data_type, library.id, type])
+                    datas.each do |data|
+                      sum += data.value                               
+                    end
+                    row.item("value#13").value(sum)
+                  end
+                  if type == 1
+                    if library == libraries.last
+                      line(row) if library == libraries.last
+                    else
+                      line_for_libraries(row)
+                    end
+                  end 
                 end
               end
             end
           end
         end
-        # remind checkout items
-        report.page.list(:list).add_row do |row|
-          row.item(:type).value(I18n.t('statistic_report.remind_checkouts'))
-          row.item(:library).value(I18n.t('statistic_report.all_library'))
-          if start_date != 27
-            13.times do |t|
-              value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => 0, :option => 5).first.value rescue 0
-              row.item("value##{t+1}").value(to_format(value))
-            end
-          else
-            num_for_last_page.times do |t|
-              value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => 0, :option => 5).first.value rescue 0
-              row.item("value##{t+1}").value(to_format(value))
-            end
-            sum = 0
-            datas = Statistic.where(:yyyymm => term, :data_type => data_type, :library_id => 0, :option => 5)
-            datas.each do |data|
-              sum = sum + data.value
-            end
-            row.item("value#13").value(sum)
-          end
-          row.item(:library_line).show
-        end
-        libraries.each do |library|
+
+        unless SystemConfiguration.get("statistic_report.daily_report.not_use_checkout_items")
+          # checkout items all libraries
+          data_type = 221
           report.page.list(:list).add_row do |row|
-            row.item(:library).value(library.display_name.localize)
+            row.item(:type).value(I18n.t('statistic_report.checkout_items'))
+            row.item(:library).value(I18n.t('statistic_report.all_library'))
             if start_date != 27
               13.times do |t|
-                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => library.id, :option => 5).first.value rescue 0
+                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => 0).no_condition.first.value rescue 0
                 row.item("value##{t+1}").value(to_format(value))
               end
             else
               num_for_last_page.times do |t|
-                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => library.id, :option => 5).first.value rescue 0
+                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => 0).no_conditionfirst.value rescue 0
                 row.item("value##{t+1}").value(to_format(value))
               end
               sum = 0
-              datas = Statistic.where(:yyyymm => term, :data_type => data_type, :library_id => library.id, :option => 5)
+              datas = Statistic.where(:yyyymm => term, :data_type => data_type, :library_id => 0).no_condition
+              datas.each do |data|
+                sum = sum + data.value
+              end
+              row.item("value#13").value(sum)
+            end
+            row.item(:library_line).show if SystemConfiguration.get("statistic_report.daily_report.checkout_items_not_use_types")
+          end
+          unless SystemConfiguration.get("statistic_report.daily_report.checkout_items_not_use_types")
+            3.times do |i|
+              report.page.list(:list).add_row do |row|
+                row.item(:option).value(I18n.t("statistic_report.item_type_#{i+1}"))
+                if start_date != 27
+                  13.times do |t|
+                    value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => 0, :option => i+1).first.value rescue 0
+                    row.item("value##{t+1}").value(to_format(value))
+                  end
+                else
+                  num_for_last_page.times do |t|
+                    value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => 0, :option => i+1).first.value rescue 0
+                    row.item("value##{t+1}").value(to_format(value))
+                  end
+                  sum = 0
+                  datas = Statistic.where(:yyyymm => term, :data_type => data_type, :library_id => 0, :option => i+1)
+                  datas.each do |data|
+                    sum = sum + data.value
+                  end
+                  row.item("value#13").value(sum)
+                end
+                line_for_libraries(row) if i == 2
+              end
+            end
+          end
+        
+          # checkout items each libraries
+          libraries.each do |library|
+            report.page.list(:list).add_row do |row|
+              row.item(:library).value(library.display_name)
+              if start_date != 27
+                13.times do |t|
+                  value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => library.id).no_condition.first.value rescue 0
+                  row.item("value##{t+1}").value(to_format(value))
+                end
+              else
+                num_for_last_page.times do |t|
+                  value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => library.id).no_condition.first.value rescue 0
+                  row.item("value##{t+1}").value(to_format(value))
+                end
+                sum = 0
+                datas = Statistic.where(:yyyymm => term, :data_type => data_type, :library_id => library.id).no_condition
+                datas.each do |data|
+                  sum = sum + data.value
+                end
+                row.item("value#13").value(sum)
+              end
+              if SystemConfiguration.get("statistic_report.daily_report.checkout_items_not_use_types")
+                if library == libraries.last
+                  line(row)
+                else
+                  row.item(:library_line).show
+                end
+              end
+            end
+            unless SystemConfiguration.get("statistic_report.daily_report.checkout_items_not_use_types")
+              3.times do |i|
+                report.page.list(:list).add_row do |row|
+                  row.item(:option).value(I18n.t("statistic_report.item_type_#{i+1}"))
+                  if start_date != 27
+                    13.times do |t|
+                      value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => library.id, :option => i+1).first.value rescue 0
+                      row.item("value##{t+1}").value(to_format(value))
+                    end
+                  else
+                    num_for_last_page.times do |t|
+                      value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => library.id, :option => i+1).first.value rescue 0
+                      row.item("value##{t+1}").value(to_format(value))
+                    end
+                    sum = 0
+                    datas = Statistic.where(:yyyymm => term, :data_type => data_type, :library_id => library.id, :option => i+1)
+                    datas.each do |data|
+                      sum = sum + data.value
+                    end
+                    row.item("value#13").value(sum)
+                  end
+                  if i == 2
+                    if library == libraries.last
+                      line(row)
+                    else
+                      line_for_libraries(row)
+                    end
+                  end
+                end
+              end
+            end
+          end
+        end
+
+        unless SystemConfiguration.get("statistic_report.daily_report.not_use_checkout_items_reminded")
+          # remind checkout items
+          report.page.list(:list).add_row do |row|
+            row.item(:type).value(I18n.t('statistic_report.remind_checkouts'))
+            row.item(:library).value(I18n.t('statistic_report.all_library'))
+            if start_date != 27
+              13.times do |t|
+                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => 0, :option => 5).first.value rescue 0
+                row.item("value##{t+1}").value(to_format(value))
+              end
+            else
+              num_for_last_page.times do |t|
+                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => 0, :option => 5).first.value rescue 0
+                row.item("value##{t+1}").value(to_format(value))
+              end
+              sum = 0
+              datas = Statistic.where(:yyyymm => term, :data_type => data_type, :library_id => 0, :option => 5)
               datas.each do |data|
                 sum = sum + data.value
               end
               row.item("value#13").value(sum)
             end
             row.item(:library_line).show
-            line(row) if library == libraries.last
+          end
+          libraries.each do |library|
+            report.page.list(:list).add_row do |row|
+              row.item(:library).value(library.display_name.localize)
+              if start_date != 27
+                13.times do |t|
+                  value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => library.id, :option => 5).first.value rescue 0
+                  row.item("value##{t+1}").value(to_format(value))
+                end
+              else
+                num_for_last_page.times do |t|
+                  value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => library.id, :option => 5).first.value rescue 0
+                  row.item("value##{t+1}").value(to_format(value))
+                end
+                sum = 0
+                datas = Statistic.where(:yyyymm => term, :data_type => data_type, :library_id => library.id, :option => 5)
+                datas.each do |data|
+                  sum = sum + data.value
+                end
+                row.item("value#13").value(sum)
+              end
+              row.item(:library_line).show
+              line(row) if library == libraries.last
+            end
           end
         end
     
-        # checkin items
-        data_type = 251
-        report.page.list(:list).add_row do |row|
-          row.item(:type).value(I18n.t('statistic_report.checkin_items'))
-          row.item(:library).value(I18n.t('statistic_report.all_library'))
-          if start_date != 27
-            13.times do |t|
-              value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => 0).no_condition.first.value rescue 0
-              row.item("value##{t+1}").value(to_format(value))
-            end
-          else
-            num_for_last_page.times do |t|
-              value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => 0).no_condition.first.value rescue 0
-              row.item("value##{t+1}").value(to_format(value))
-            end
-            sum = 0
-            datas = Statistic.where(:yyyymm => term, :data_type => data_type, :library_id => 0).no_condition
-            datas.each do |data|
-              sum = sum + data.value
-            end
-            row.item("value#13").value(sum)
-          end
-          row.item(:library_line).show
-        end
-        libraries.each do |library|
+        unless SystemConfiguration.get("statistic_report.daily_report.not_use_checkin_items")
+          # checkin items
+          data_type = 251
           report.page.list(:list).add_row do |row|
-            row.item(:library).value(library.display_name)
+            row.item(:type).value(I18n.t('statistic_report.checkin_items'))
+            row.item(:library).value(I18n.t('statistic_report.all_library'))
             if start_date != 27
               13.times do |t|
-                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => library.id).no_condition.first.value rescue 0
+                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => 0).no_condition.first.value rescue 0
                 row.item("value##{t+1}").value(to_format(value))
               end
             else
               num_for_last_page.times do |t|
-                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => library.id).no_condition.first.value rescue 0
+                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => 0).no_condition.first.value rescue 0
                 row.item("value##{t+1}").value(to_format(value))
               end
               sum = 0
-              datas = Statistic.where(:yyyymm => term, :data_type => data_type, :library_id => library.id).no_condition
+              datas = Statistic.where(:yyyymm => term, :data_type => data_type, :library_id => 0).no_condition
               datas.each do |data|
                 sum = sum + data.value
               end
               row.item("value#13").value(sum)
             end
             row.item(:library_line).show
-            line(row) if library == libraries.last
+          end
+          libraries.each do |library|
+            report.page.list(:list).add_row do |row|
+              row.item(:library).value(library.display_name)
+              if start_date != 27
+                13.times do |t|
+                  value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => library.id).no_condition.first.value rescue 0
+                  row.item("value##{t+1}").value(to_format(value))
+                end
+              else
+                num_for_last_page.times do |t|
+                  value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => library.id).no_condition.first.value rescue 0
+                  row.item("value##{t+1}").value(to_format(value))
+                end
+                sum = 0
+                datas = Statistic.where(:yyyymm => term, :data_type => data_type, :library_id => library.id).no_condition
+                datas.each do |data|
+                  sum = sum + data.value
+                end
+                row.item("value#13").value(sum)
+              end
+              row.item(:library_line).show
+              line(row) if library == libraries.last
+            end
           end
         end
 
-        # checkin items remindered
-        report.page.list(:list).add_row do |row|
-          row.item(:type).value(I18n.t('statistic_report.checkin_remindered'))
-          row.item(:library).value(I18n.t('statistic_report.all_library'))
-          if start_date != 27
-            13.times do |t|
-              value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => 0, :option => 5).first.value rescue 0
-              row.item("value##{t+1}").value(to_format(value))
-            end
-          else
-            num_for_last_page.times do |t|
-              value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => 0, :option => 5).first.value rescue 0
-              row.item("value##{t+1}").value(to_format(value))
-            end
-            sum = 0
-            datas = Statistic.where(:yyyymm => term, :data_type => data_type, :library_id => 0).no_condition
-            datas.each do |data|
-              sum = sum + data.value
-            end
-            row.item("value#13").value(sum)
-          end
-          row.item(:library_line).show
-        end
-        libraries.each do |library|
+        unless SystemConfiguration.get("statistic_report.daily_report.not_use_checkin_items_reminded")
+          # checkin items remindered
           report.page.list(:list).add_row do |row|
-            row.item(:library).value(library.display_name.localize)
+            row.item(:type).value(I18n.t('statistic_report.checkin_remindered'))
+            row.item(:library).value(I18n.t('statistic_report.all_library'))
             if start_date != 27
               13.times do |t|
-                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => library.id, :option => 5).first.value rescue 0
+                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => 0, :option => 5).first.value rescue 0
                 row.item("value##{t+1}").value(to_format(value))
               end
             else
               num_for_last_page.times do |t|
-                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => library.id, :option => 5).first.value rescue 0
+                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => 0, :option => 5).first.value rescue 0
                 row.item("value##{t+1}").value(to_format(value))
               end
               sum = 0
-              datas = Statistic.where(:yyyymm => term, :data_type => data_type, :library_id => library.id, :option => 5)
+              datas = Statistic.where(:yyyymm => term, :data_type => data_type, :library_id => 0).no_condition
               datas.each do |data|
                 sum = sum + data.value
               end
               row.item("value#13").value(sum)
             end
             row.item(:library_line).show
-            line(row) if library == libraries.last
+          end
+          libraries.each do |library|
+            report.page.list(:list).add_row do |row|
+              row.item(:library).value(library.display_name.localize)
+              if start_date != 27
+                13.times do |t|
+                  value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => library.id, :option => 5).first.value rescue 0
+                  row.item("value##{t+1}").value(to_format(value))
+                end
+              else
+                num_for_last_page.times do |t|
+                  value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => data_type, :library_id => library.id, :option => 5).first.value rescue 0
+                  row.item("value##{t+1}").value(to_format(value))
+                end
+                sum = 0
+                datas = Statistic.where(:yyyymm => term, :data_type => data_type, :library_id => library.id, :option => 5)
+                datas.each do |data|
+                  sum = sum + data.value
+                end
+                row.item("value#13").value(sum)
+              end
+              row.item(:library_line).show
+              line(row) if library == libraries.last
+            end
           end
         end
 
-        # reserves all libraries
-        report.page.list(:list).add_row do |row|
-          row.item(:type).value(I18n.t('statistic_report.reserves'))
-          row.item(:library).value(I18n.t('statistic_report.all_library'))
-          if start_date != 27
-            13.times do |t|
-              value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 233, :library_id => 0).no_condition.first.value rescue 0
-              row.item("value##{t+1}").value(to_format(value))
-            end
-          else  
-            num_for_last_page.times do |t|
-              value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 233, :library_id => 0).no_condition.first.value rescue 0
-              row.item("value##{t+1}").value(to_format(value))
-            end
-            sum = 0
-            datas = Statistic.where(:yyyymm => term, :data_type => 233, :library_id => 0).no_condition
-            datas.each do |data|
-              sum = sum + data.value
-            end
-            row.item("value#13").value(sum)
-          end
-        end
-        # reserves on counter all libraries
-        report.page.list(:list).add_row do |row|
-          row.item(:option).value(I18n.t('statistic_report.on_counter'))
-          if start_date != 27
-            13.times do |t|
-              value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 233, :library_id => 0, :option => 1).first.value rescue 0
-              row.item("value##{t+1}").value(to_format(value))
-            end
-          else  
-            num_for_last_page.times do |t|
-              value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 233, :library_id => 0, :option => 1).first.value rescue 0
-              row.item("value##{t+1}").value(to_format(value))
-            end
-            sum = 0
-            datas = Statistic.where(:yyyymm => term, :data_type => 233, :library_id => 0, :option => 1)
-            datas.each do |data|
-              sum = sum + data.value
-            end
-            row.item("value#13").value(sum)
-          end
-        end
-        # reserves from OPAC all libraries
-        report.page.list(:list).add_row do |row|
-          row.item(:option).value(I18n.t('statistic_report.from_opac'))
-          if start_date != 27
-            13.times do |t|
-              value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 233, :library_id => 0, :option => 2).first.value rescue 0
-              row.item("value##{t+1}").value(to_format(value))
-            end
-          else  
-            num_for_last_page.times do |t|
-              value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 233, :library_id => 0, :option => 2).first.value rescue 0
-              row.item("value##{t+1}").value(to_format(value))
-            end
-            sum = 0
-            datas = Statistic.where(:yyyymm => term, :data_type => 233, :library_id => 0, :option => 2)
-            datas.each do |data|
-              sum = sum + data.value
-            end
-            row.item("value#13").value(sum)
-          end
-          line_for_libraries(row)
-        end
-        # reserves each library
-        libraries.each do |library|
+        unless SystemConfiguration.get("statistic_report.daily_report.not_use_reserves")
+          # reserves all libraries
           report.page.list(:list).add_row do |row|
-            row.item(:library).value(library.display_name)
+            row.item(:type).value(I18n.t('statistic_report.reserves'))
+            row.item(:library).value(I18n.t('statistic_report.all_library'))
             if start_date != 27
               13.times do |t|
-                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 233, :library_id => library.id).no_condition.first.value rescue 0
+                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 233, :library_id => 0).no_condition.first.value rescue 0
                 row.item("value##{t+1}").value(to_format(value))
               end
             else  
               num_for_last_page.times do |t|
-                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 233, :library_id => library.id).no_condition.first.value rescue 0
+                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 233, :library_id => 0).no_condition.first.value rescue 0
                 row.item("value##{t+1}").value(to_format(value))
               end
               sum = 0
-              datas = Statistic.where(:yyyymm => term, :data_type => 233, :library_id => library.id).no_condition
+              datas = Statistic.where(:yyyymm => term, :data_type => 233, :library_id => 0).no_condition
               datas.each do |data|
                 sum = sum + data.value
               end
               row.item("value#13").value(sum)
             end
+            row.item(:library_line).show if SystemConfiguration.get("statistic_report.daily_report.reserves_not_use_types")
           end
-          # on counter
-          report.page.list(:list).add_row do |row|
-            row.item(:option).value(I18n.t('statistic_report.on_counter'))
-            if start_date != 27
-              13.times do |t|
-                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 233, :library_id => library.id, :option => 1).first.value rescue 0
-                row.item("value##{t+1}").value(to_format(value))
+          unless SystemConfiguration.get("statistic_report.daily_report.reserves_not_use_types")
+            # reserves on counter all libraries
+            report.page.list(:list).add_row do |row|
+              row.item(:option).value(I18n.t('statistic_report.on_counter'))
+              if start_date != 27
+                13.times do |t|
+                  value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 233, :library_id => 0, :option => 1).first.value rescue 0
+                  row.item("value##{t+1}").value(to_format(value))
+                end
+              else  
+                num_for_last_page.times do |t|
+                  value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 233, :library_id => 0, :option => 1).first.value rescue 0
+                  row.item("value##{t+1}").value(to_format(value))
+                end
+                sum = 0
+                datas = Statistic.where(:yyyymm => term, :data_type => 233, :library_id => 0, :option => 1)
+                datas.each do |data|
+                  sum = sum + data.value
+                end
+                row.item("value#13").value(sum)
               end
-            else  
-              num_for_last_page.times do |t|
-                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 233, :library_id => library.id, :option => 1).first.value rescue 0
-                row.item("value##{t+1}").value(to_format(value))
-              end
-              sum = 0
-              datas = Statistic.where(:yyyymm => term, :data_type => 233, :library_id => library.id, :option => 1)
-              datas.each do |data|
-                sum = sum + data.value
-              end
-              row.item("value#13").value(sum)
             end
-          end
-          # from OPAC
-          report.page.list(:list).add_row do |row|
-            row.item(:option).value(I18n.t('statistic_report.from_opac'))
-            if start_date != 27
-              13.times do |t|
-                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 233, :library_id => library.id, :option => 2).first.value rescue 0
-                row.item("value##{t+1}").value(to_format(value))
+            # reserves from OPAC all libraries
+            report.page.list(:list).add_row do |row|
+              row.item(:option).value(I18n.t('statistic_report.from_opac'))
+              if start_date != 27
+                13.times do |t|
+                  value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 233, :library_id => 0, :option => 2).first.value rescue 0
+                  row.item("value##{t+1}").value(to_format(value))
+                end
+              else  
+                num_for_last_page.times do |t|
+                  value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 233, :library_id => 0, :option => 2).first.value rescue 0
+                  row.item("value##{t+1}").value(to_format(value))
+                end
+                sum = 0
+                datas = Statistic.where(:yyyymm => term, :data_type => 233, :library_id => 0, :option => 2)
+                datas.each do |data|
+                  sum = sum + data.value
+                end
+                row.item("value#13").value(sum)
               end
-            else  
-              num_for_last_page.times do |t|
-                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 233, :library_id => library.id, :option => 2).first.value rescue 0
-                row.item("value##{t+1}").value(to_format(value))
-              end
-              sum = 0
-              datas = Statistic.where(:yyyymm => term, :data_type => 233, :library_id => library.id, :option => 2)
-              datas.each do |data|
-                sum = sum + data.value
-              end
-              row.item("value#13").value(sum)
-            end
-            if library == libraries.last
-              line(row)
-            else
               line_for_libraries(row)
             end
           end
-        end
-        # questions all libraries
-        report.page.list(:list).add_row do |row|
-          row.item(:type).value(I18n.t('statistic_report.questions'))
-          row.item(:library).value(I18n.t('statistic_report.all_library'))
-          if start_date != 27
-            13.times do |t|
-              value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 243, :library_id => 0).no_condition.first.value rescue 0
-              row.item("value##{t+1}").value(to_format(value))
-            end  
-          else
-            num_for_last_page.times do |t|
-              value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 243, :library_id => 0).no_condition.first.value rescue 0
-              row.item("value##{t+1}").value(to_format(value))
+          # reserves each library
+          libraries.each do |library|
+            report.page.list(:list).add_row do |row|
+              row.item(:library).value(library.display_name)
+              if start_date != 27
+                13.times do |t|
+                  value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 233, :library_id => library.id).no_condition.first.value rescue 0
+                  row.item("value##{t+1}").value(to_format(value))
+                end
+              else  
+                num_for_last_page.times do |t|
+                  value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 233, :library_id => library.id).no_condition.first.value rescue 0
+                  row.item("value##{t+1}").value(to_format(value))
+                end
+                sum = 0
+                datas = Statistic.where(:yyyymm => term, :data_type => 233, :library_id => library.id).no_condition
+                datas.each do |data|
+                  sum = sum + data.value
+                end
+                row.item("value#13").value(sum)
+              end
+              if SystemConfiguration.get("statistic_report.daily_report.reserves_not_use_types")
+                if library == libraries.last
+                  line(row)
+                else
+                  row.item(:library_line).show
+                end
+              end
             end
-            sum = 0              
-            datas = Statistic.where(:yyyymm => term, :data_type => 243, :library_id => 0).no_condition
-            datas.each do |data|
-              sum = sum + data.value 
-            end
-            row.item("value#13").value(sum)
           end
-          row.item(:library_line).show
+          unless SystemConfiguration.get("statistic_report.daily_report.reserves_not_use_types")
+            # on counter
+            report.page.list(:list).add_row do |row|
+              row.item(:option).value(I18n.t('statistic_report.on_counter'))
+              if start_date != 27
+                13.times do |t|
+                  value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 233, :library_id => library.id, :option => 1).first.value rescue 0
+                  row.item("value##{t+1}").value(to_format(value))
+                end
+              else  
+                num_for_last_page.times do |t|
+                  value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 233, :library_id => library.id, :option => 1).first.value rescue 0
+                  row.item("value##{t+1}").value(to_format(value))
+                end
+                sum = 0
+                datas = Statistic.where(:yyyymm => term, :data_type => 233, :library_id => library.id, :option => 1)
+                datas.each do |data|
+                  sum = sum + data.value
+                end
+                row.item("value#13").value(sum)
+              end
+            end
+            # from OPAC
+            report.page.list(:list).add_row do |row|
+              row.item(:option).value(I18n.t('statistic_report.from_opac'))
+              if start_date != 27
+                13.times do |t|
+                  value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 233, :library_id => library.id, :option => 2).first.value rescue 0
+                  row.item("value##{t+1}").value(to_format(value))
+                end
+              else  
+                num_for_last_page.times do |t|
+                  value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 233, :library_id => library.id, :option => 2).first.value rescue 0
+                  row.item("value##{t+1}").value(to_format(value))
+                end
+                sum = 0
+                datas = Statistic.where(:yyyymm => term, :data_type => 233, :library_id => library.id, :option => 2)
+                datas.each do |data|
+                  sum = sum + data.value
+                end
+                row.item("value#13").value(sum)
+              end
+              if library == libraries.last
+                line(row)
+              else
+                line_for_libraries(row)
+              end
+            end
+          end
         end
-        # questions each library
-        libraries.each do |library|
+       
+        unless SystemConfiguration.get("statistic_report.daily_report.not_use_questions")
+          # questions all libraries
           report.page.list(:list).add_row do |row|
-            row.item(:library).value(library.display_name)
+            row.item(:type).value(I18n.t('statistic_report.questions'))
+            row.item(:library).value(I18n.t('statistic_report.all_library'))
             if start_date != 27
               13.times do |t|
-                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 243, :library_id => library.id).no_condition.first.value rescue 0
+                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 243, :library_id => 0).no_condition.first.value rescue 0
                 row.item("value##{t+1}").value(to_format(value))
               end  
             else
               num_for_last_page.times do |t|
-                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 243, :library_id => library.id).no_condition.first.value rescue 0
+                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 243, :library_id => 0).no_condition.first.value rescue 0
                 row.item("value##{t+1}").value(to_format(value))
               end
-              sum = 0
-              datas = Statistic.where(:yyyymm => term, :data_type => 243, :library_id => library.id).no_condition
+              sum = 0              
+              datas = Statistic.where(:yyyymm => term, :data_type => 243, :library_id => 0).no_condition
               datas.each do |data|
-                sum = sum + data.value
+                sum = sum + data.value 
               end
               row.item("value#13").value(sum)
             end
             row.item(:library_line).show
-            line(row) if library == libraries.last
+          end
+          # questions each library
+          libraries.each do |library|
+            report.page.list(:list).add_row do |row|
+              row.item(:library).value(library.display_name)
+              if start_date != 27
+                13.times do |t|
+                  value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 243, :library_id => library.id).no_condition.first.value rescue 0
+                  row.item("value##{t+1}").value(to_format(value))
+                end  
+              else
+                num_for_last_page.times do |t|
+                  value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 243, :library_id => library.id).no_condition.first.value rescue 0
+                  row.item("value##{t+1}").value(to_format(value))
+                end
+                sum = 0
+                datas = Statistic.where(:yyyymm => term, :data_type => 243, :library_id => library.id).no_condition
+                datas.each do |data|
+                  sum = sum + data.value
+                end
+                row.item("value#13").value(sum)
+              end
+              row.item(:library_line).show
+              line(row) if library == libraries.last
+            end
           end
         end
-        # consultations each library
-        libraries.each do |library|
-          report.page.list(:list).add_row do |row|
-            row.item(:type).value(I18n.t('statistic_report.consultations')) if libraries.first == library
-            row.item(:library).value(library.display_name)
-            if start_date != 27
-              13.times do |t|
-                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 214, :library_id => library.id).no_condition.first.value rescue 0
-                row.item("value##{t+1}").value(to_format(value))
-              end  
-            else
-              num_for_last_page.times do |t|
-                value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 214, :library_id => library.id).no_condition.first.value rescue 0
-                row.item("value##{t+1}").value(to_format(value))
+
+        unless SystemConfiguration.get("statistic_report.daily_report.not_use_consultations")
+          # consultations each library
+          libraries.each do |library|
+            report.page.list(:list).add_row do |row|
+              row.item(:type).value(I18n.t('statistic_report.consultations')) if libraries.first == library
+              row.item(:library).value(library.display_name)
+              if start_date != 27
+                13.times do |t|
+                  value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 214, :library_id => library.id).no_condition.first.value rescue 0
+                  row.item("value##{t+1}").value(to_format(value))
+                end  
+              else
+                num_for_last_page.times do |t|
+                  value = Statistic.where(:yyyymmdd => "#{term.to_i}#{"%02d" % (t + start_date)}", :data_type => 214, :library_id => library.id).no_condition.first.value rescue 0
+                  row.item("value##{t+1}").value(to_format(value))
+                end
+                sum = 0
+                datas = Statistic.where(:yyyymm => term, :data_type => 214, :library_id => library.id).no_condition
+                datas.each do |data|
+                  sum = sum + data.value
+                end
+                row.item("value#13").value(sum)
               end
-              sum = 0
-              datas = Statistic.where(:yyyymm => term, :data_type => 214, :library_id => library.id).no_condition
-              datas.each do |data|
-                sum = sum + data.value
-              end
-              row.item("value#13").value(sum)
+              row.item(:library_line).show
+              line(row) if library == libraries.last
             end
-            row.item(:library_line).show
-            line(row) if library == libraries.last
           end
         end
       end
@@ -3224,68 +3282,50 @@ class StatisticReport < ActiveRecord::Base
       columns << ["sum"]
       output.print "\""+row.join("\"\t\"")+"\"\n"
 
-      # items all libraries
-      row = []
-      columns.each do |column|
-        case column[0]
-        when :type
-          row << I18n.t('statistic_report.items')
-        when :library
-          row << I18n.t('statistic_report.all_library')
-        when :option
-          row << ""
-        when "sum"
-          value = Statistic.where(:yyyymmdd => "#{term}#{days}", :data_type => 211, :library_id => 0).no_condition.first.value rescue 0
-          row << to_format(value)
-        else
-          value = Statistic.where(:yyyymmdd => column[0], :data_type => 211, :library_id => 0).no_condition.first.value rescue 0
-          row << to_format(value)
-        end
-      end  
-      output.print "\""+row.join("\"\t\"")+"\"\n"
-      # items each libraries
-      libraries.each do |library|
+      unless SystemConfiguration.get("statistic_report.daily_report.not_use_items")
+        # items all libraries
         row = []
         columns.each do |column|
           case column[0]
           when :type
             row << I18n.t('statistic_report.items')
           when :library
-            row << library.display_name
+            row << I18n.t('statistic_report.all_library')
           when :option
             row << ""
           when "sum"
-            value = Statistic.where(:yyyymmdd => "#{term}#{days}", :data_type => 211, :library_id => library.id).no_condition.first.value rescue 0
+            value = Statistic.where(:yyyymmdd => "#{term}#{days}", :data_type => 211, :library_id => 0).no_condition.first.value rescue 0
             row << to_format(value)
           else
-            value = Statistic.where(:yyyymmdd => column[0], :data_type => 211, :library_id => library.id).no_condition.first.value rescue 0
+            value = Statistic.where(:yyyymmdd => column[0], :data_type => 211, :library_id => 0).no_condition.first.value rescue 0
             row << to_format(value)
           end
         end  
         output.print "\""+row.join("\"\t\"")+"\"\n"
-      end
-      # checkout users all libraries
-      sum = 0
-      row = []
-      columns.each do |column|
-        case column[0]
-        when :type
-          row << I18n.t('statistic_report.checkout_users')
-        when :library
-          row << I18n.t('statistic_report.all_library')
-        when :option
-          row << ""
-        when "sum"
-          row << to_format(sum)
-        else
-          value = Statistic.where(:yyyymmdd => column[0], :data_type => 222, :library_id => 0).no_condition.first.value rescue 0
-          sum += value
-          row << to_format(value)
+        # items each libraries
+        libraries.each do |library|
+          row = []
+          columns.each do |column|
+            case column[0]
+            when :type
+              row << I18n.t('statistic_report.items')
+            when :library
+              row << library.display_name
+            when :option
+              row << ""
+            when "sum"
+              value = Statistic.where(:yyyymmdd => "#{term}#{days}", :data_type => 211, :library_id => library.id).no_condition.first.value rescue 0
+              row << to_format(value)
+            else
+              value = Statistic.where(:yyyymmdd => column[0], :data_type => 211, :library_id => library.id).no_condition.first.value rescue 0
+              row << to_format(value)
+            end
+          end  
+          output.print "\""+row.join("\"\t\"")+"\"\n"
         end
-      end  
-      output.print "\""+row.join("\"\t\"")+"\"\n"
-      # each user type
-      5.downto(1) do |type|
+      end
+      unless SystemConfiguration.get("statistic_report.daily_report.not_use_checkout_users")
+        # checkout users all libraries
         sum = 0
         row = []
         columns.each do |column|
@@ -3295,40 +3335,42 @@ class StatisticReport < ActiveRecord::Base
           when :library
             row << I18n.t('statistic_report.all_library')
           when :option
-            row << I18n.t("statistic_report.user_type_#{type}")
-          when "sum"
-            row << to_format(sum)
-          else
-            value = Statistic.where(:yyyymmdd => column[0], :data_type => 222, :library_id => 0, :option => 0, :user_type => type).first.value rescue 0
-            sum += value
-            row << to_format(value)
-          end
-        end  
-        output.print "\""+row.join("\"\t\"")+"\"\n"
-      end
-      # checkout users each libraries
-      libraries.each do |library|
-        sum = 0
-        row = []
-        columns.each do |column|
-          case column[0]
-          when :type
-            row << I18n.t('statistic_report.checkout_users')
-          when :library
-            row << library.display_name
-          when :option
             row << ""
           when "sum"
             row << to_format(sum)
           else
-            value = Statistic.where(:yyyymmdd => column[0], :data_type => 222, :library_id => library.id).no_condition.first.value rescue 0
+            value = Statistic.where(:yyyymmdd => column[0], :data_type => 222, :library_id => 0).no_condition.first.value rescue 0
             sum += value
             row << to_format(value)
           end
         end  
         output.print "\""+row.join("\"\t\"")+"\"\n"
-        # each user type
-        5.downto(1) do |type|
+        unless SystemConfiguration.get("statistic_report.daily_report.checkout_users_not_use_types")
+          # each user type
+          5.downto(1) do |type|
+            sum = 0
+            row = []
+            columns.each do |column|
+              case column[0]
+              when :type
+                row << I18n.t('statistic_report.checkout_users')
+              when :library
+                row << I18n.t('statistic_report.all_library')
+              when :option
+                row << I18n.t("statistic_report.user_type_#{type}")
+              when "sum"
+                row << to_format(sum)
+              else
+                value = Statistic.where(:yyyymmdd => column[0], :data_type => 222, :library_id => 0, :option => 0, :user_type => type).first.value rescue 0
+                sum += value
+                row << to_format(value)
+              end
+            end
+          end  
+          output.print "\""+row.join("\"\t\"")+"\"\n"
+        end
+        # checkout users each libraries
+        libraries.each do |library|
           sum = 0
           row = []
           columns.each do |column|
@@ -3338,39 +3380,44 @@ class StatisticReport < ActiveRecord::Base
             when :library
               row << library.display_name
             when :option
-              row << I18n.t("statistic_report.user_type_#{type}")
+              row << ""
             when "sum"
               row << to_format(sum)
             else
-              value = Statistic.where(:yyyymmdd => column[0], :data_type => 222, :library_id => library.id, :option =>0, :user_type => type).first.value rescue 0
+              value = Statistic.where(:yyyymmdd => column[0], :data_type => 222, :library_id => library.id).no_condition.first.value rescue 0
               sum += value
               row << to_format(value)
             end
           end  
           output.print "\""+row.join("\"\t\"")+"\"\n"
+          unless SystemConfiguration.get("statistic_report.daily_report.checkout_users_not_use_types")
+            # each user type
+            5.downto(1) do |type|
+              sum = 0
+              row = []
+              columns.each do |column|
+                case column[0]
+                when :type
+                  row << I18n.t('statistic_report.checkout_users')
+                when :library
+                  row << library.display_name
+                when :option
+                  row << I18n.t("statistic_report.user_type_#{type}")
+                when "sum"
+                  row << to_format(sum)
+                else
+                  value = Statistic.where(:yyyymmdd => column[0], :data_type => 222, :library_id => library.id, :option =>0, :user_type => type).first.value rescue 0
+                  sum += value
+                  row << to_format(value)
+                end
+              end
+            end  
+            output.print "\""+row.join("\"\t\"")+"\"\n"
+          end
         end
       end
-      # checkout items all libraries
-      sum = 0
-      row = []
-      columns.each do |column|
-        case column[0]
-        when :type
-          row << I18n.t('statistic_report.checkout_items')
-        when :library
-          row << I18n.t('statistic_report.all_library')
-        when :option
-          row << ""
-        when "sum"
-          row << to_format(sum)
-        else
-          value = Statistic.where(:yyyymmdd => column[0], :data_type => 221, :library_id => 0).no_condition.first.value rescue 0
-          sum += value
-          row << to_format(value)
-        end
-      end
-      output.print "\""+row.join("\"\t\"")+"\"\n"  
-      3.times do |i|
+      unless SystemConfiguration.get("statistic_report.daily_report.not_use_checkout_items")
+        # checkout items all libraries
         sum = 0
         row = []
         columns.each do |column|
@@ -3380,39 +3427,41 @@ class StatisticReport < ActiveRecord::Base
           when :library
             row << I18n.t('statistic_report.all_library')
           when :option
-            row << I18n.t("statistic_report.item_type_#{i+1}")
-          when "sum"
-            row << to_format(sum)
-          else
-            value = Statistic.where(:yyyymmdd => column[0], :data_type => 221, :library_id => 0, :option => i+1).first.value rescue 0
-            sum += value
-            row << to_format(value)
-          end
-        end 
-        output.print "\""+row.join("\"\t\"")+"\"\n"
-      end        
-      # checkout items each libraries
-      libraries.each do |library|
-        sum = 0
-        row = []
-        columns.each do |column|
-          case column[0]
-          when :type
-            row << I18n.t('statistic_report.checkout_items')
-          when :library
-            row << library.display_name
-          when :option
             row << ""
           when "sum"
             row << to_format(sum)
           else
-            value = Statistic.where(:yyyymmdd => column[0], :data_type => 221, :library_id => library.id).no_condition.first.value rescue 0
+            value = Statistic.where(:yyyymmdd => column[0], :data_type => 221, :library_id => 0).no_condition.first.value rescue 0
             sum += value
             row << to_format(value)
           end
-        end 
-        output.print "\""+row.join("\"\t\"")+"\"\n"
-        3.times do |i|
+        end
+        output.print "\""+row.join("\"\t\"")+"\"\n"  
+        unless SystemConfiguration.get("statistic_report.daily_report.checkout_items_not_use_types")
+          3.times do |i|
+            sum = 0
+            row = []
+            columns.each do |column|
+              case column[0]
+              when :type
+                row << I18n.t('statistic_report.checkout_items')
+              when :library
+                row << I18n.t('statistic_report.all_library')
+              when :option
+                row << I18n.t("statistic_report.item_type_#{i+1}")
+              when "sum"
+                row << to_format(sum)
+              else
+                value = Statistic.where(:yyyymmdd => column[0], :data_type => 221, :library_id => 0, :option => i+1).first.value rescue 0
+                sum += value
+                row << to_format(value)
+              end
+            end 
+            output.print "\""+row.join("\"\t\"")+"\"\n"
+          end
+        end        
+        # checkout items each libraries
+        libraries.each do |library|
           sum = 0
           row = []
           columns.each do |column|
@@ -3422,39 +3471,43 @@ class StatisticReport < ActiveRecord::Base
             when :library
               row << library.display_name
             when :option
-              row << I18n.t("statistic_report.item_type_#{i+1}")
+              row << ""
             when "sum"
               row << to_format(sum)
             else
-              value = Statistic.where(:yyyymmdd => column[0], :data_type => 221, :library_id => library.id, :option => i+1).first.value rescue 0
+              value = Statistic.where(:yyyymmdd => column[0], :data_type => 221, :library_id => library.id).no_condition.first.value rescue 0
               sum += value
               row << to_format(value)
             end
           end 
           output.print "\""+row.join("\"\t\"")+"\"\n"
+          unless SystemConfiguration.get("statistic_report.daily_report.checkout_items_not_use_types")
+            3.times do |i|
+              sum = 0
+              row = []
+              columns.each do |column|
+                case column[0]
+                when :type
+                  row << I18n.t('statistic_report.checkout_items')
+                when :library
+                  row << library.display_name
+                when :option
+                  row << I18n.t("statistic_report.item_type_#{i+1}")
+                when "sum"
+                  row << to_format(sum)
+                else
+                  value = Statistic.where(:yyyymmdd => column[0], :data_type => 221, :library_id => library.id, :option => i+1).first.value rescue 0
+                  sum += value
+                  row << to_format(value)
+                end
+              end 
+              output.print "\""+row.join("\"\t\"")+"\"\n"
+            end
+          end  
         end
       end
-      # checkout items reminded
-      sum = 0
-      row = []
-      columns.each do |column|
-        case column[0]
-        when :type
-          row << I18n.t('statistic_report.remind_checkouts')
-        when :library
-          row << I18n.t('statistic_report.all_library')
-        when :option
-          row << ""
-        when "sum"
-          row << to_format(sum)
-        else
-          value = Statistic.where(:yyyymmdd => column[0], :data_type => 221, :library_id => 0, :option => 5).first.value rescue 0
-          sum += value
-          row << to_format(value)
-        end
-      end
-      output.print "\""+row.join("\"\t\"")+"\"\n"  
-      libraries.each do |library|
+      unless SystemConfiguration.get("statistic_report.daily_report.not_use_checkout_items_reminded")
+        # checkout items reminded
         sum = 0
         row = []
         columns.each do |column|
@@ -3462,41 +3515,43 @@ class StatisticReport < ActiveRecord::Base
           when :type
             row << I18n.t('statistic_report.remind_checkouts')
           when :library
-            row << library.display_name.localize
+            row << I18n.t('statistic_report.all_library')
           when :option
             row << ""
           when "sum"
             row << to_format(sum)
           else
-            value = Statistic.where(:yyyymmdd => column[0], :data_type => 221, :library_id => library.id, :option => 5).first.value rescue 0
+            value = Statistic.where(:yyyymmdd => column[0], :data_type => 221, :library_id => 0, :option => 5).first.value rescue 0
             sum += value
             row << to_format(value)
           end
         end
         output.print "\""+row.join("\"\t\"")+"\"\n"  
+        libraries.each do |library|
+          sum = 0
+          row = []
+          columns.each do |column|
+            case column[0]
+            when :type
+              row << I18n.t('statistic_report.remind_checkouts')
+            when :library
+              row << library.display_name.localize
+            when :option
+              row << ""
+            when "sum"
+              row << to_format(sum)
+            else
+              value = Statistic.where(:yyyymmdd => column[0], :data_type => 221, :library_id => library.id, :option => 5).first.value rescue 0
+              sum += value
+              row << to_format(value)
+            end
+          end
+          output.print "\""+row.join("\"\t\"")+"\"\n"  
+        end
       end
 
-      # checkin items
-      sum = 0
-      row = []
-      columns.each do |column|
-        case column[0]
-        when :type
-          row << I18n.t('statistic_report.checkin_items')
-        when :library
-          row << I18n.t('statistic_report.all_library')
-        when :option
-          row << ""
-        when "sum"
-          row << to_format(sum)
-        else
-          value = Statistic.where(:yyyymmdd => column[0], :data_type => 251, :library_id => 0).no_condition.first.value rescue 0
-          sum += value
-          row << to_format(value)
-        end
-      end 
-      output.print "\""+row.join("\"\t\"")+"\"\n"
-      libraries.each do |library|
+      unless SystemConfiguration.get("statistic_report.daily_report.not_use_checkin_items")
+        # checkin items
         sum = 0
         row = []
         columns.each do |column|
@@ -3504,40 +3559,43 @@ class StatisticReport < ActiveRecord::Base
           when :type
             row << I18n.t('statistic_report.checkin_items')
           when :library
-            row << library.display_name
+            row << I18n.t('statistic_report.all_library')
           when :option
             row << ""
           when "sum"
             row << to_format(sum)
           else
-            value = Statistic.where(:yyyymmdd => column[0], :data_type => 251, :library_id => library.id).no_condition.first.value rescue 0
+            value = Statistic.where(:yyyymmdd => column[0], :data_type => 251, :library_id => 0).no_condition.first.value rescue 0
             sum += value
             row << to_format(value)
           end
         end 
         output.print "\""+row.join("\"\t\"")+"\"\n"
-      end
-      # checkin items reminded
-      sum = 0
-      row = []
-      columns.each do |column|
-        case column[0]
-        when :type
-          row << I18n.t('statistic_report.checkin_remindered')
-        when :library
-          row << I18n.t('statistic_report.all_library')
-        when :option
-          row << ""
-        when "sum"
-          row << to_format(sum)
-        else
-          value = Statistic.where(:yyyymmdd => column[0], :data_type => 251, :library_id => 0, :option => 5).first.value rescue 0
-          sum += value
-          row << to_format(value)
+        libraries.each do |library|
+          sum = 0
+          row = []
+          columns.each do |column|
+            case column[0]
+            when :type
+              row << I18n.t('statistic_report.checkin_items')
+            when :library
+              row << library.display_name
+            when :option
+              row << ""
+            when "sum"
+              row << to_format(sum)
+            else
+              value = Statistic.where(:yyyymmdd => column[0], :data_type => 251, :library_id => library.id).no_condition.first.value rescue 0
+              sum += value
+              row << to_format(value)
+            end
+          end 
+          output.print "\""+row.join("\"\t\"")+"\"\n"
         end
       end
-      output.print "\""+row.join("\"\t\"")+"\"\n"  
-      libraries.each do |library|
+
+      unless SystemConfiguration.get("statistic_report.daily_report.not_use_checkin_items_reminded")
+        # checkin items reminded
         sum = 0
         row = []
         columns.each do |column|
@@ -3545,81 +3603,43 @@ class StatisticReport < ActiveRecord::Base
           when :type
             row << I18n.t('statistic_report.checkin_remindered')
           when :library
-            row << library.display_name.localize
+            row << I18n.t('statistic_report.all_library')
           when :option
             row << ""
           when "sum"
             row << to_format(sum)
           else
-            value = Statistic.where(:yyyymmdd => column[0], :data_type => 251, :library_id => library.id, :option => 5).first.value rescue 0
+            value = Statistic.where(:yyyymmdd => column[0], :data_type => 251, :library_id => 0, :option => 5).first.value rescue 0
             sum += value
             row << to_format(value)
           end
         end
         output.print "\""+row.join("\"\t\"")+"\"\n"  
+        libraries.each do |library|
+          sum = 0
+          row = []
+          columns.each do |column|
+            case column[0]
+            when :type
+              row << I18n.t('statistic_report.checkin_remindered')
+            when :library
+              row << library.display_name.localize
+            when :option
+              row << ""
+            when "sum"
+              row << to_format(sum)
+            else
+              value = Statistic.where(:yyyymmdd => column[0], :data_type => 251, :library_id => library.id, :option => 5).first.value rescue 0
+              sum += value
+              row << to_format(value)
+            end
+          end
+          output.print "\""+row.join("\"\t\"")+"\"\n"  
+        end
       end
-      # reserves all libraries
-      sum = 0
-      row = []
-      columns.each do |column|
-        case column[0]
-        when :type
-          row << I18n.t('statistic_report.reserves')
-        when :library
-          row << I18n.t('statistic_report.all_library')
-        when :option
-          row << ""
-        when "sum"
-          row << to_format(sum)
-        else
-          value = Statistic.where(:yyyymmdd => column[0], :data_type => 233, :library_id => 0).no_condition.first.value rescue 0
-          sum += value
-          row << to_format(value)
-        end
-      end 
-      output.print "\""+row.join("\"\t\"")+"\"\n"
-      # reserves on counter all libraries
-      sum = 0
-      row = []
-      columns.each do |column|
-        case column[0]
-        when :type
-          row << I18n.t('statistic_report.reserves')
-        when :library
-          row << I18n.t('statistic_report.all_library')
-        when :option
-          row << I18n.t('statistic_report.on_counter')
-        when "sum"
-          row << to_format(sum)
-        else
-          value = Statistic.where(:yyyymmdd => column[0], :data_type => 233, :library_id => 0, :option => 1).first.value rescue 0
-          sum += value
-          row << to_format(value)
-        end
-      end 
-      output.print "\""+row.join("\"\t\"")+"\"\n"
-      # reserves from OPAC all libraries
-      sum = 0
-      row = []
-      columns.each do |column|
-        case column[0]
-        when :type
-          row << I18n.t('statistic_report.reserves')
-        when :library
-          row << I18n.t('statistic_report.all_library')
-        when :option
-          row << I18n.t('statistic_report.from_opac')
-        when "sum"
-          row << to_format(sum)
-        else
-          value = Statistic.where(:yyyymmdd => column[0], :data_type => 233, :library_id => 0, :option => 2).first.value rescue 0
-          sum += value
-          row << to_format(value)
-        end
-      end 
-      output.print "\""+row.join("\"\t\"")+"\"\n"
-      # reserves each library
-      libraries.each do |library|
+
+      unless SystemConfiguration.get("statistic_report.daily_report.not_use_reserves")
+        # reserves all libraries
         sum = 0
         row = []
         columns.each do |column|
@@ -3627,81 +3647,127 @@ class StatisticReport < ActiveRecord::Base
           when :type
             row << I18n.t('statistic_report.reserves')
           when :library
-            row << library.display_name.localize
+            row << I18n.t('statistic_report.all_library')
           when :option
             row << ""
           when "sum"
             row << to_format(sum)
           else
-            value = Statistic.where(:yyyymmdd => column[0], :data_type => 233, :library_id => library.id).no_condition.first.value rescue 0
-	    sum += value
+            value = Statistic.where(:yyyymmdd => column[0], :data_type => 233, :library_id => 0).no_condition.first.value rescue 0
+            sum += value
             row << to_format(value)
           end
         end 
         output.print "\""+row.join("\"\t\"")+"\"\n"
-        # on counter
-        sum = 0
-        row = []
-        columns.each do |column|
-          case column[0]
-          when :type
-            row << I18n.t('statistic_report.reserves')
-          when :library
-            row << library.display_name.localize
-          when :option
-            row << I18n.t('statistic_report.on_counter')
-          when "sum"
-            row << to_format(sum)
-          else
-            value = Statistic.where(:yyyymmdd => column[0], :data_type => 233, :library_id => library.id, :option => 1).first.value rescue 0
-	    sum += value
-            row << to_format(value)
-          end
-        end 
-        output.print "\""+row.join("\"\t\"")+"\"\n"
-        # from OPAC
-        sum = 0
-        row = []
-        columns.each do |column|
-          case column[0]
-          when :type
-            row << I18n.t('statistic_report.reserves')
-          when :library
-            row << library.display_name.localize
-          when :option
-            row << I18n.t('statistic_report.from_opac')
-          when "sum"
-            row << to_format(sum)
-          else
-            value = Statistic.where(:yyyymmdd => column[0], :data_type => 233, :library_id => library.id, :option => 2).first.value rescue 0
-	    sum += value
-            row << to_format(value)
-          end
-        end 
-        output.print "\""+row.join("\"\t\"")+"\"\n"
-      end
-      # questions all libraries
-      sum = 0
-      row = []
-      columns.each do |column|
-        case column[0]
-        when :type
-          row << I18n.t('statistic_report.questions')
-        when :library
-          row << I18n.t('statistic_report.all_library')
-        when :option
-          row << ""
-        when "sum"
-          row << to_format(sum)
-        else
-          value = Statistic.where(:yyyymmdd => column[0], :data_type => 243, :library_id => 0).no_condition.first.value rescue 0
-          sum += value
-          row << to_format(value)
+        unless SystemConfiguration.get("statistic_report.daily_report.reserves_not_use_types")
+          # reserves on counter all libraries
+          sum = 0
+          row = []
+          columns.each do |column|
+            case column[0]
+            when :type
+              row << I18n.t('statistic_report.reserves')
+            when :library
+              row << I18n.t('statistic_report.all_library')
+            when :option
+              row << I18n.t('statistic_report.on_counter')
+            when "sum"
+             row << to_format(sum)
+            else
+              value = Statistic.where(:yyyymmdd => column[0], :data_type => 233, :library_id => 0, :option => 1).first.value rescue 0
+              sum += value
+              row << to_format(value)
+            end
+          end 
+          output.print "\""+row.join("\"\t\"")+"\"\n"
+          # reserves from OPAC all libraries
+          sum = 0
+          row = []
+          columns.each do |column|
+            case column[0]
+            when :type
+              row << I18n.t('statistic_report.reserves')
+            when :library
+              row << I18n.t('statistic_report.all_library')
+            when :option
+              row << I18n.t('statistic_report.from_opac')
+            when "sum"
+              row << to_format(sum)
+            else
+              value = Statistic.where(:yyyymmdd => column[0], :data_type => 233, :library_id => 0, :option => 2).first.value rescue 0
+              sum += value
+              row << to_format(value)
+            end
+          end 
+          output.print "\""+row.join("\"\t\"")+"\"\n"
         end
-      end 
-      output.print "\""+row.join("\"\t\"")+"\"\n"
-      # questions each library
-      libraries.each do |library|
+        # reserves each library
+        libraries.each do |library|
+          sum = 0
+          row = []
+          columns.each do |column|
+            case column[0]
+            when :type
+              row << I18n.t('statistic_report.reserves')
+            when :library
+              row << library.display_name.localize
+            when :option
+              row << ""
+            when "sum"
+              row << to_format(sum)
+            else
+              value = Statistic.where(:yyyymmdd => column[0], :data_type => 233, :library_id => library.id).no_condition.first.value rescue 0
+	      sum += value
+              row << to_format(value)
+            end
+          end 
+          output.print "\""+row.join("\"\t\"")+"\"\n"
+        end
+        unless SystemConfiguration.get("statistic_report.daily_report.reserves_not_use_types")
+          # on counter
+          sum = 0
+          row = []
+          columns.each do |column|
+            case column[0]
+            when :type
+              row << I18n.t('statistic_report.reserves')
+            when :library
+              row << library.display_name.localize
+            when :option
+              row << I18n.t('statistic_report.on_counter')
+            when "sum"
+              row << to_format(sum)
+            else
+              value = Statistic.where(:yyyymmdd => column[0], :data_type => 233, :library_id => library.id, :option => 1).first.value rescue 0
+	      sum += value
+              row << to_format(value)
+            end
+          end 
+          output.print "\""+row.join("\"\t\"")+"\"\n"
+          # from OPAC
+          sum = 0
+          row = []
+          columns.each do |column|
+            case column[0]
+            when :type
+              row << I18n.t('statistic_report.reserves')
+            when :library
+              row << library.display_name.localize
+            when :option
+              row << I18n.t('statistic_report.from_opac')
+            when "sum"
+              row << to_format(sum)
+            else
+              value = Statistic.where(:yyyymmdd => column[0], :data_type => 233, :library_id => library.id, :option => 2).first.value rescue 0
+              sum += value
+              row << to_format(value)
+            end
+          end 
+          output.print "\""+row.join("\"\t\"")+"\"\n"
+        end
+      end
+      unless SystemConfiguration.get("statistic_report.daily_report.not_use_questions")
+        # questions all libraries
         sum = 0
         row = []
         columns.each do |column|
@@ -3709,40 +3775,64 @@ class StatisticReport < ActiveRecord::Base
           when :type
             row << I18n.t('statistic_report.questions')
           when :library
-            row << library.display_name
+            row << I18n.t('statistic_report.all_library')
           when :option
             row << ""
           when "sum"
             row << to_format(sum)
           else
-            value = Statistic.where(:yyyymmdd => column[0], :data_type => 243, :library_id => library.id).no_condition.first.value rescue 0
+            value = Statistic.where(:yyyymmdd => column[0], :data_type => 243, :library_id => 0).no_condition.first.value rescue 0
             sum += value
             row << to_format(value)
           end
         end 
         output.print "\""+row.join("\"\t\"")+"\"\n"
+        # questions each library
+        libraries.each do |library|
+          sum = 0
+          row = []
+          columns.each do |column|
+            case column[0]
+            when :type
+              row << I18n.t('statistic_report.questions')
+            when :library
+              row << library.display_name
+            when :option
+              row << ""
+            when "sum"
+              row << to_format(sum)
+            else
+              value = Statistic.where(:yyyymmdd => column[0], :data_type => 243, :library_id => library.id).no_condition.first.value rescue 0
+              sum += value
+              row << to_format(value)
+            end
+          end 
+          output.print "\""+row.join("\"\t\"")+"\"\n"
+        end
       end
-      # consultations each library
-      libraries.each do |library|
-        sum = 0
-        row = []
-        columns.each do |column|
-          case column[0]
-          when :type
-            row << I18n.t('statistic_report.consultations')
-          when :library
-            row << library.display_name
-          when :option
-            row << ""
-          when "sum"
-            row << to_format(sum)
-          else
-            value = Statistic.where(:yyyymmdd => column[0], :data_type => 214, :library_id => library.id).no_condition.first.value rescue 0
-            sum += value
-            row << to_format(value)
-          end
-        end 
-        output.print "\""+row.join("\"\t\"")+"\"\n"
+      unless SystemConfiguration.get("statistic_report.daily_report.not_use_consultations")
+        # consultations each library
+        libraries.each do |library|
+          sum = 0
+          row = []
+          columns.each do |column|
+            case column[0]
+            when :type
+              row << I18n.t('statistic_report.consultations')
+            when :library
+              row << library.display_name
+            when :option
+              row << ""
+            when "sum"
+              row << to_format(sum)
+            else
+              value = Statistic.where(:yyyymmdd => column[0], :data_type => 214, :library_id => library.id).no_condition.first.value rescue 0
+              sum += value
+              row << to_format(value)
+            end
+          end 
+          output.print "\""+row.join("\"\t\"")+"\"\n"
+        end
       end
     end
     return tsv_file
