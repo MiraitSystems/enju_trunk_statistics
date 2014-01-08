@@ -253,9 +253,6 @@ class Statistic < ActiveRecord::Base
         statistic.save! if statistic.value > 0        
       end
 
-      
-      
-=begin
       # items each checkout types
       @checkout_types.each do |checkout_type|
         statistic = Statistic.new
@@ -265,6 +262,7 @@ class Statistic < ActiveRecord::Base
         statistic.value = Item.count_by_sql(["select count(*) from items where checkout_type_id = ? AND created_at >= ? AND created_at  < ?", checkout_type.id, start_at, end_at])
         statistic.save! if statistic.value > 0
       end
+=begin
       # items each call_numbers
       unless @call_numbers.nil?
         @call_numbers.each do |num|
@@ -277,7 +275,7 @@ class Statistic < ActiveRecord::Base
           statistic.save! if statistic.value > 0        
         end
       end
-
+=end
       @libraries.each do |library|
         statistic = Statistic.new
         set_date(statistic, end_at, term_id)
@@ -295,6 +293,7 @@ class Statistic < ActiveRecord::Base
           statistic.value = Item.count_by_sql(["select count(items) from items, shelves, libraries where items.shelf_id = shelves.id AND libraries.id = shelves.library_id AND libraries.id = ? AND items.checkout_type_id = ? AND items.created_at >= ? AND items.created_at < ?", library.id, checkout_type.id, start_at, end_at])
           statistic.save! if statistic.value > 0
         end
+=begin
         # items each manifestation_types
         @manifestation_type_ids.each do |id|
           statistic = Statistic.new
@@ -329,8 +328,8 @@ class Statistic < ActiveRecord::Base
             end
           end
         end
-      end
 =end
+      end
     end
     rescue Exception => e
       s = "Failed to calculate items: #{e}"
