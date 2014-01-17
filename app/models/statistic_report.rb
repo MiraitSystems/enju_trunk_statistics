@@ -9,6 +9,7 @@ class StatisticReport < ActiveRecord::Base
       case target
       when 'users'          then User.count
       when 'manifestations' then Manifestation.without_master.count
+      when 'departments'    then Department.count   
       when 'yearly'
         Statistic.where(
           "data_type IN ('121', '133') 
