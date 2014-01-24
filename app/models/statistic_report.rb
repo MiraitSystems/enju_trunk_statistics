@@ -82,7 +82,7 @@ class StatisticReport < ActiveRecord::Base
     manifestations.each_with_index do |manifestation, num|
       report.page.list(:list).add_row do |row|
         row.item('jpn_or_foreign').value(Manifestation::JPN_OR_FOREIGN.invert[manifestation.jpn_or_foreign] || I18n.t('jpn_or_foreign.other'))
-        row.item('manifestation_type').value(manifestation.manifestation_type.display_name)
+        row.item('manifestation_type').value(manifestation.manifestation_type.display_name.localize)
         row.item('ndc').value(manifestation.ndc)
         row.item('title').value(manifestation.original_title)
         checkoutall_cnt = 0
