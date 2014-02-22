@@ -1711,7 +1711,7 @@ class Statistic < ActiveRecord::Base
       set_date(statistic, end_at, term_id)
       statistic.data_type = data_type
       statistic.age = age
-      sql = "select count(*) from users, patrons where users.id = patrons.user_id AND date_part('year', age(patrons.date_of_birth)) >= ? AND date_part('year', age(patrons.date_of_birth)) <= ? AND users.created_at <= ?"
+      sql = "select count(*) from users, agents where users.id = agents.user_id AND date_part('year', age(agents.date_of_birth)) >= ? AND date_part('year', age(agents.date_of_birth)) <= ? AND users.created_at <= ?"
       unless age == 7
         statistic.value = User.count_by_sql([sql, (age.to_s + 0.to_s).to_i, (age.to_s + 9.to_s).to_i, end_at])
       else
@@ -1723,7 +1723,7 @@ class Statistic < ActiveRecord::Base
       set_date(statistic, end_at, term_id)
       statistic.data_type = data_type
       statistic.age = age
-      sql = "select count(*) from users, patrons where users.id = patrons.user_id AND users.locked_at IS NULL AND date_part('year', age(patrons.date_of_birth)) >= ? AND date_part('year', age(patrons.date_of_birth)) <= ? AND users.created_at <= ?"
+      sql = "select count(*) from users, agents where users.id = agents.user_id AND users.locked_at IS NULL AND date_part('year', age(agents.date_of_birth)) >= ? AND date_part('year', age(agents.date_of_birth)) <= ? AND users.created_at <= ?"
       unless age == 7
         statistic.value = User.count_by_sql([sql, (age.to_s + 0.to_s).to_i, (age.to_s + 9.to_s).to_i, end_at])
       else
@@ -1735,7 +1735,7 @@ class Statistic < ActiveRecord::Base
       set_date(statistic, end_at, term_id)
       statistic.data_type = data_type
       statistic.age = age
-      sql = "select count(*) from users, patrons where users.id = patrons.user_id AND users.locked_at IS NOT NULL AND date_part('year', age(patrons.date_of_birth)) >= ? AND date_part('year', age(patrons.date_of_birth)) <= ? AND users.created_at <= ?"
+      sql = "select count(*) from users, agents where users.id = agents.user_id AND users.locked_at IS NOT NULL AND date_part('year', age(agents.date_of_birth)) >= ? AND date_part('year', age(agents.date_of_birth)) <= ? AND users.created_at <= ?"
       unless age == 7
         statistic.value = User.count_by_sql([sql, (age.to_s + 0.to_s).to_i, (age.to_s + 9.to_s).to_i, end_at])
       else
@@ -1748,7 +1748,7 @@ class Statistic < ActiveRecord::Base
       statistic.data_type = data_type
       statistic.age = age
       statistic.option = 3
-      sql = "select count(*) from users, patrons where users.id = patrons.user_id AND date_part('year', age(patrons.date_of_birth)) >= ? AND date_part('year', age(patrons.date_of_birth)) <= ? AND users.created_at <= ?"
+      sql = "select count(*) from users, agents where users.id = agents.user_id AND date_part('year', age(agents.date_of_birth)) >= ? AND date_part('year', age(agents.date_of_birth)) <= ? AND users.created_at <= ?"
       unless age == 7
         statistic.value = User.provisional.count_by_sql([sql, (age.to_s + 0.to_s).to_i, (age.to_s + 9.to_s).to_i, end_at])
       else
@@ -1762,7 +1762,7 @@ class Statistic < ActiveRecord::Base
         statistic.data_type = data_type
         statistic.age = age
         statistic.library_id = library.id
-        sql = "select count(*) from users, patrons, libraries where users.id = patrons.user_id AND users.library_id = libraries.id AND libraries.id = ? AND date_part('year', age(patrons.date_of_birth)) >= ? AND date_part('year', age(patrons.date_of_birth)) <= ? AND users.created_at <= ?"
+        sql = "select count(*) from users, agents, libraries where users.id = agents.user_id AND users.library_id = libraries.id AND libraries.id = ? AND date_part('year', age(agents.date_of_birth)) >= ? AND date_part('year', age(agents.date_of_birth)) <= ? AND users.created_at <= ?"
         unless age == 7
           statistic.value = User.count_by_sql([sql, library.id, (age.to_s + 0.to_s).to_i, (age.to_s + 9.to_s).to_i, end_at])
         else
@@ -1775,7 +1775,7 @@ class Statistic < ActiveRecord::Base
         statistic.data_type = data_type
         statistic.age = age
         statistic.library_id = library.id
-        sql = "select count(*) from users, patrons, libraries where users.id = patrons.user_id AND users.library_id = libraries.id AND libraries.id = ? AND users.locked_at IS NULL AND date_part('year', age(patrons.date_of_birth)) >= ? AND date_part('year', age(patrons.date_of_birth)) <= ? AND users.created_at <= ?"
+        sql = "select count(*) from users, agents, libraries where users.id = agents.user_id AND users.library_id = libraries.id AND libraries.id = ? AND users.locked_at IS NULL AND date_part('year', age(agents.date_of_birth)) >= ? AND date_part('year', age(agents.date_of_birth)) <= ? AND users.created_at <= ?"
         unless age == 7
           statistic.value = User.count_by_sql([sql, library.id, (age.to_s + 0.to_s).to_i, (age.to_s + 9.to_s).to_i, end_at])
         else
@@ -1788,7 +1788,7 @@ class Statistic < ActiveRecord::Base
         statistic.data_type = data_type
         statistic.age = age
         statistic.library_id = library.id
-        sql = "select count(*) from users, patrons, libraries where users.id = patrons.user_id AND users.library_id = libraries.id AND libraries.id = ? AND users.locked_at IS NOT NULL AND date_part('year', age(patrons.date_of_birth)) >= ? AND date_part('year', age(patrons.date_of_birth)) <= ? AND users.created_at <= ?"
+        sql = "select count(*) from users, agents, libraries where users.id = agents.user_id AND users.library_id = libraries.id AND libraries.id = ? AND users.locked_at IS NOT NULL AND date_part('year', age(agents.date_of_birth)) >= ? AND date_part('year', age(agents.date_of_birth)) <= ? AND users.created_at <= ?"
         unless age == 7
           statistic.value = User.count_by_sql([sql, library.id, (age.to_s + 0.to_s).to_i, (age.to_s + 9.to_s).to_i, end_at])
         else
@@ -1802,7 +1802,7 @@ class Statistic < ActiveRecord::Base
         statistic.age = age
         statistic.option = 3
         statistic.library_id = library.id
-        sql = "select count(*) from users, patrons, libraries where users.id = patrons.user_id AND users.library_id = libraries.id AND libraries.id = ? AND date_part('year', age(patrons.date_of_birth)) >= ? AND date_part('year', age(patrons.date_of_birth)) <= ? AND users.created_at <= ?"
+        sql = "select count(*) from users, agents, libraries where users.id = agents.user_id AND users.library_id = libraries.id AND libraries.id = ? AND date_part('year', age(agents.date_of_birth)) >= ? AND date_part('year', age(agents.date_of_birth)) <= ? AND users.created_at <= ?"
         unless age == 7
           statistic.value = User.provisional.count_by_sql([sql, library.id, (age.to_s + 0.to_s).to_i, (age.to_s + 9.to_s).to_i, end_at])
         else
@@ -1817,7 +1817,7 @@ class Statistic < ActiveRecord::Base
     set_date(statistic, end_at, term_id)
     statistic.data_type = data_type
     statistic.age = 10
-    sql = "select count(*) from users, patrons where users.id = patrons.user_id AND patrons.date_of_birth IS NULL AND users.created_at <= ?"
+    sql = "select count(*) from users, agents where users.id = agents.user_id AND agents.date_of_birth IS NULL AND users.created_at <= ?"
     statistic.value = User.count_by_sql([sql, end_at])
     statistic.save! if statistic.value > 0
     # users 12 available
@@ -1825,7 +1825,7 @@ class Statistic < ActiveRecord::Base
     set_date(statistic, end_at, term_id)
     statistic.data_type = data_type
     statistic.age = 10
-    sql = "select count(*) from users, patrons where users.id = patrons.user_id AND users.locked_at IS NULL AND patrons.date_of_birth IS NULL AND users.created_at <= ?"
+    sql = "select count(*) from users, agents where users.id = agents.user_id AND users.locked_at IS NULL AND agents.date_of_birth IS NULL AND users.created_at <= ?"
     statistic.value = User.count_by_sql([sql, end_at])
     statistic.save! if statistic.value > 0
     # users 12 locked
@@ -1833,7 +1833,7 @@ class Statistic < ActiveRecord::Base
     set_date(statistic, end_at, term_id)
     statistic.data_type = data_type
     statistic.age = 10
-    sql = "select count(*) from users, patrons where users.id = patrons.user_id AND users.locked_at IS NOT NULL AND patrons.date_of_birth IS NULL AND users.created_at <= ?"
+    sql = "select count(*) from users, agents where users.id = agents.user_id AND users.locked_at IS NOT NULL AND agents.date_of_birth IS NULL AND users.created_at <= ?"
     statistic.value = User.count_by_sql([sql, end_at])
     statistic.save! if statistic.value > 0
     # provisional users 12 option: 3
@@ -1842,7 +1842,7 @@ class Statistic < ActiveRecord::Base
     statistic.data_type = data_type
     statistic.age = 10
     statistic.option = 3
-    sql = "select count(*) from users, patrons where users.id = patrons.user_id AND patrons.date_of_birth IS NULL AND users.created_at <= ?"
+    sql = "select count(*) from users, agents where users.id = agents.user_id AND agents.date_of_birth IS NULL AND users.created_at <= ?"
     statistic.value = User.provisional.count_by_sql([sql, end_at])
     statistic.save! if statistic.value > 0
     @libraries.each do |library|
@@ -1851,7 +1851,7 @@ class Statistic < ActiveRecord::Base
       statistic.data_type = data_type
       statistic.age = 10
       statistic.library_id = library.id
-      sql = "select count(*) from users, patrons, libraries where users.id = patrons.user_id AND users.library_id = libraries.id AND libraries.id = ? AND patrons.date_of_birth IS NULL AND users.created_at <= ?"
+      sql = "select count(*) from users, agents, libraries where users.id = agents.user_id AND users.library_id = libraries.id AND libraries.id = ? AND agents.date_of_birth IS NULL AND users.created_at <= ?"
       statistic.value = User.count_by_sql([sql, library.id, end_at])
       statistic.save! if statistic.value > 0
       # users 12 available
@@ -1860,7 +1860,7 @@ class Statistic < ActiveRecord::Base
       statistic.data_type = data_type
       statistic.age = 10
       statistic.library_id = library.id
-      sql = "select count(*) from users, patrons, libraries where users.id = patrons.user_id AND users.library_id = libraries.id AND libraries.id = ? AND users.locked_at IS NULL AND patrons.date_of_birth IS NULL AND users.created_at <= ?"
+      sql = "select count(*) from users, agents, libraries where users.id = agents.user_id AND users.library_id = libraries.id AND libraries.id = ? AND users.locked_at IS NULL AND agents.date_of_birth IS NULL AND users.created_at <= ?"
       statistic.value = User.count_by_sql([sql, library.id, end_at])
       statistic.save! if statistic.value > 0
       # users 12 locked
@@ -1869,7 +1869,7 @@ class Statistic < ActiveRecord::Base
       statistic.data_type = data_type
       statistic.age = 10
       statistic.library_id = library.id
-      sql = "select count(*) from users, patrons, libraries where users.id = patrons.user_id AND users.library_id = libraries.id AND libraries.id = ? AND users.locked_at IS NOT NULL AND patrons.date_of_birth IS NULL AND users.created_at <= ?"
+      sql = "select count(*) from users, agents, libraries where users.id = agents.user_id AND users.library_id = libraries.id AND libraries.id = ? AND users.locked_at IS NOT NULL AND agents.date_of_birth IS NULL AND users.created_at <= ?"
       statistic.value = User.count_by_sql([sql, library.id, end_at])
       statistic.save! if statistic.value > 0
       # provisional users 12 option: 3
@@ -1879,7 +1879,7 @@ class Statistic < ActiveRecord::Base
       statistic.age = 10
       statistic.library_id = library.id
       statistic.option = 3
-      sql = "select count(*) from users, patrons, libraries where users.id = patrons.user_id AND users.library_id = libraries.id AND libraries.id = ? AND patrons.date_of_birth IS NULL AND users.created_at <= ?"
+      sql = "select count(*) from users, agents, libraries where users.id = agents.user_id AND users.library_id = libraries.id AND libraries.id = ? AND agents.date_of_birth IS NULL AND users.created_at <= ?"
       statistic.value = User.provisional.count_by_sql([sql, library.id, end_at])
       statistic.save! if statistic.value > 0
     end
@@ -1893,8 +1893,8 @@ class Statistic < ActiveRecord::Base
       statistic.data_type = data_type
       statistic.age = age
       statistic.area_id = 0
-      sql = "select count(*) from users, patrons where users.id = patrons.user_id AND date_part('year', age(patrons.date_of_birth)) >= ? AND date_part('year', age(patrons.date_of_birth)) <= ? AND users.created_at <= ?"
-      sql = "select count(*) from users, patrons where users.id = patrons.user_id AND date_part('year', age(patrons.date_of_birth)) >= ? AND date_part('year', age(patrons.date_of_birth)) <= ? AND users.created_at <= ?"
+      sql = "select count(*) from users, agents where users.id = agents.user_id AND date_part('year', age(agents.date_of_birth)) >= ? AND date_part('year', age(agents.date_of_birth)) <= ? AND users.created_at <= ?"
+      sql = "select count(*) from users, agents where users.id = agents.user_id AND date_part('year', age(agents.date_of_birth)) >= ? AND date_part('year', age(agents.date_of_birth)) <= ? AND users.created_at <= ?"
       unless age == 7
         statistic.value = User.count_by_sql([sql, (age.to_s + 0.to_s).to_i, (age.to_s + 9.to_s).to_i, end_at])
       else
@@ -1908,7 +1908,7 @@ class Statistic < ActiveRecord::Base
     statistic.data_type = data_type
     statistic.age = 10
     statistic.area_id = 0
-    sql = "select count(*) from users, patrons where users.id = patrons.user_id AND patrons.date_of_birth IS NULL AND users.created_at <= ?"
+    sql = "select count(*) from users, agents where users.id = agents.user_id AND agents.date_of_birth IS NULL AND users.created_at <= ?"
     statistic.value = User.count_by_sql([sql, end_at])
     statistic.save! if statistic.value > 0
     # each area
@@ -1970,14 +1970,14 @@ class Statistic < ActiveRecord::Base
     ages = Array.new(9, 0)
     @users.each do |user|
       if @known_users.index(user) == nil
-        if user.patron.date_of_birth
+        if user.agent.date_of_birth
           8.times do |age|
             start_date = Time.now
             end_date = Time.now
             end_date = Time.now.years_ago((age.to_s + 0.to_s).to_i)
             start_date = Time.now.years_ago((age.to_s + 9.to_s).to_i) unless age == 7
             start_date = Time.now.years_ago(200) if age == 7
-            if user.patron.date_of_birth = start_date.beginning_of_day.utc.iso8601..end_date.end_of_day.utc.iso8601
+            if user.agent.date_of_birth = start_date.beginning_of_day.utc.iso8601..end_date.end_of_day.utc.iso8601
               ages[age] = ages[age] + 1
               break 
             end
@@ -2006,7 +2006,7 @@ class Statistic < ActiveRecord::Base
       set_date(statistic, start_at, term_id)
       statistic.data_type = data_type
       statistic.age = age
-      sql = "select count(distinct checkouts.user_id) from checkouts, users, patrons where checkouts.user_id = users.id AND users.id = patrons.user_id AND date_part('year', age(patrons.date_of_birth)) >= ? AND date_part('year', age(patrons.date_of_birth)) <= ? AND checkouts.created_at >= ? AND checkouts.created_at <= ? "
+      sql = "select count(distinct checkouts.user_id) from checkouts, users, agents where checkouts.user_id = users.id AND users.id = agents.user_id AND date_part('year', age(agents.date_of_birth)) >= ? AND date_part('year', age(agents.date_of_birth)) <= ? AND checkouts.created_at >= ? AND checkouts.created_at <= ? "
       unless age == 7
         statistic.value = Checkout.count_by_sql([sql, (age.to_s + 0.to_s).to_i, (age.to_s + 9.to_s).to_i, start_at, end_at])
       else
@@ -2021,7 +2021,7 @@ class Statistic < ActiveRecord::Base
         statistic.data_type = data_type
         statistic.age = age
         statistic.library_id = library.id
-        sql = "select count(distinct checkouts.user_id) from checkouts, users, patrons, libraries  where checkouts.user_id = users.id AND users.id = patrons.user_id AND users.library_id = libraries.id AND libraries.id = ? AND date_part('year', age(patrons.date_of_birth)) >= ? AND date_part('year', age(patrons.date_of_birth)) <= ? AND checkouts.created_at >= ? AND checkouts.created_at <= ? "      
+        sql = "select count(distinct checkouts.user_id) from checkouts, users, agents, libraries  where checkouts.user_id = users.id AND users.id = agents.user_id AND users.library_id = libraries.id AND libraries.id = ? AND date_part('year', age(agents.date_of_birth)) >= ? AND date_part('year', age(agents.date_of_birth)) <= ? AND checkouts.created_at >= ? AND checkouts.created_at <= ? "      
         unless age == 7
           statistic.value = Checkout.count_by_sql([sql, library.id, (age.to_s + 0.to_s).to_i, (age.to_s + 9.to_s).to_i, start_at, end_at])
         else
@@ -2037,7 +2037,7 @@ class Statistic < ActiveRecord::Base
     set_date(statistic, start_at, term_id)
     statistic.data_type = data_type
     statistic.age = 10
-    sql = "select count(distinct checkouts.user_id) from checkouts, users, patrons where checkouts.user_id = users.id AND users.id = patrons.user_id AND patrons.date_of_birth IS NULL AND checkouts.created_at >= ? AND checkouts.created_at <= ? "
+    sql = "select count(distinct checkouts.user_id) from checkouts, users, agents where checkouts.user_id = users.id AND users.id = agents.user_id AND agents.date_of_birth IS NULL AND checkouts.created_at >= ? AND checkouts.created_at <= ? "
     statistic.value = Checkout.count_by_sql([sql, start_at, end_at])
     statistic.save! if statistic.value > 0
     @libraries.each do |library|
@@ -2046,7 +2046,7 @@ class Statistic < ActiveRecord::Base
       statistic.data_type = data_type
       statistic.age = 10
       statistic.library_id = library.id
-      sql = "select count(distinct checkouts.user_id) from checkouts, users, patrons, libraries  where checkouts.user_id = users.id AND users.id = patrons.user_id AND users.library_id = libraries.id AND libraries.id = ? AND patrons.date_of_birth IS NULL AND checkouts.created_at >= ? AND checkouts.created_at <= ? "      
+      sql = "select count(distinct checkouts.user_id) from checkouts, users, agents, libraries  where checkouts.user_id = users.id AND users.id = agents.user_id AND users.library_id = libraries.id AND libraries.id = ? AND agents.date_of_birth IS NULL AND checkouts.created_at >= ? AND checkouts.created_at <= ? "      
       statistic.value = Checkout.count_by_sql([sql, library.id, start_at, end_at])
       statistic.save! if statistic.value > 0
     end
@@ -2058,7 +2058,7 @@ class Statistic < ActiveRecord::Base
       set_date(statistic, start_at, term_id)
       statistic.data_type = data_type
       statistic.age = age
-      sql = "select count(*) from checkouts, users, patrons where checkouts.user_id = users.id AND users.id = patrons.user_id AND date_part('year', age(patrons.date_of_birth)) >= ? AND date_part('year', age(patrons.date_of_birth)) <= ? AND checkouts.created_at >= ? AND checkouts.created_at <= ? "
+      sql = "select count(*) from checkouts, users, agents where checkouts.user_id = users.id AND users.id = agents.user_id AND date_part('year', age(agents.date_of_birth)) >= ? AND date_part('year', age(agents.date_of_birth)) <= ? AND checkouts.created_at >= ? AND checkouts.created_at <= ? "
       unless age == 7
         statistic.value = Checkout.count_by_sql([sql, (age.to_s + 0.to_s).to_i, (age.to_s + 9.to_s).to_i, start_at, end_at])
       else
@@ -2071,7 +2071,7 @@ class Statistic < ActiveRecord::Base
       statistic.data_type = data_type
       statistic.age = age
       statistic.option = 1
-      sql = "select count(checkouts) from checkouts, items, exemplifies, manifestations, users, patrons where checkouts.item_id = items.id AND exemplifies.item_id = items.id AND exemplifies.manifestation_id = manifestations.id AND checkouts.user_id = users.id AND users.id = patrons.user_id AND manifestations.ndc ~ '^[0-9]' AND date_part('year', age(patrons.date_of_birth)) >= ? AND date_part('year', age(patrons.date_of_birth)) <= ? AND checkouts.created_at >= ? AND checkouts.created_at <= ?"
+      sql = "select count(checkouts) from checkouts, items, exemplifies, manifestations, users, agents where checkouts.item_id = items.id AND exemplifies.item_id = items.id AND exemplifies.manifestation_id = manifestations.id AND checkouts.user_id = users.id AND users.id = agents.user_id AND manifestations.ndc ~ '^[0-9]' AND date_part('year', age(agents.date_of_birth)) >= ? AND date_part('year', age(agents.date_of_birth)) <= ? AND checkouts.created_at >= ? AND checkouts.created_at <= ?"
       unless age == 7
         statistic.value = Checkout.count_by_sql([sql, (age.to_s + 0.to_s).to_i, (age.to_s + 9.to_s).to_i, start_at, end_at])
       else
@@ -2084,7 +2084,7 @@ class Statistic < ActiveRecord::Base
       statistic.data_type = data_type
       statistic.age = age
       statistic.option = 2
-      sql = "select count(checkouts) from checkouts, items, exemplifies, manifestations, users, patrons where checkouts.item_id = items.id AND exemplifies.item_id = items.id AND exemplifies.manifestation_id = manifestations.id AND checkouts.user_id = users.id AND users.id = patrons.user_id AND manifestations.ndc ~ '^[KEC]' AND date_part('year', age(patrons.date_of_birth)) >= ? AND date_part('year', age(patrons.date_of_birth)) <= ? AND checkouts.created_at >= ? AND checkouts.created_at <= ?"
+      sql = "select count(checkouts) from checkouts, items, exemplifies, manifestations, users, agents where checkouts.item_id = items.id AND exemplifies.item_id = items.id AND exemplifies.manifestation_id = manifestations.id AND checkouts.user_id = users.id AND users.id = agents.user_id AND manifestations.ndc ~ '^[KEC]' AND date_part('year', age(agents.date_of_birth)) >= ? AND date_part('year', age(agents.date_of_birth)) <= ? AND checkouts.created_at >= ? AND checkouts.created_at <= ?"
       unless age == 7
         statistic.value = Checkout.count_by_sql([sql, (age.to_s + 0.to_s).to_i, (age.to_s + 9.to_s).to_i, start_at, end_at])
       else
@@ -2097,7 +2097,7 @@ class Statistic < ActiveRecord::Base
       statistic.data_type = data_type
       statistic.age = age
       statistic.option = 3
-      sql = "select count(checkouts) from checkouts, items, exemplifies, manifestations, users, patrons where checkouts.item_id = items.id AND exemplifies.item_id = items.id AND exemplifies.manifestation_id = manifestations.id AND checkouts.user_id = users.id AND users.id = patrons.user_id AND (manifestations.ndc ~ '^[^KEC0-9]' OR manifestations.ndc IS NULL) AND date_part('year', age(patrons.date_of_birth)) >= ? AND date_part('year', age(patrons.date_of_birth)) <= ? AND checkouts.created_at >= ? AND checkouts.created_at <= ?"
+      sql = "select count(checkouts) from checkouts, items, exemplifies, manifestations, users, agents where checkouts.item_id = items.id AND exemplifies.item_id = items.id AND exemplifies.manifestation_id = manifestations.id AND checkouts.user_id = users.id AND users.id = agents.user_id AND (manifestations.ndc ~ '^[^KEC0-9]' OR manifestations.ndc IS NULL) AND date_part('year', age(agents.date_of_birth)) >= ? AND date_part('year', age(agents.date_of_birth)) <= ? AND checkouts.created_at >= ? AND checkouts.created_at <= ?"
       unless age == 7
         statistic.value = Checkout.count_by_sql([sql, (age.to_s + 0.to_s).to_i, (age.to_s + 9.to_s).to_i, start_at, end_at])
       else
@@ -2112,7 +2112,7 @@ class Statistic < ActiveRecord::Base
         statistic.data_type = data_type
         statistic.age = age
         statistic.library_id = library.id
-        sql = "select count(*) from checkouts, patrons, libraries, users librarian_users, users user_users where checkouts.librarian_id = librarian_users.id AND checkouts.user_id = user_users.id AND user_users.id = patrons.user_id AND librarian_users.library_id = libraries.id AND libraries.id = ? AND date_part('year', age(patrons.date_of_birth)) >= ? AND date_part('year', age(patrons.date_of_birth)) <= ? AND checkouts.created_at >= ? AND checkouts.created_at <= ? "
+        sql = "select count(*) from checkouts, agents, libraries, users librarian_users, users user_users where checkouts.librarian_id = librarian_users.id AND checkouts.user_id = user_users.id AND user_users.id = agents.user_id AND librarian_users.library_id = libraries.id AND libraries.id = ? AND date_part('year', age(agents.date_of_birth)) >= ? AND date_part('year', age(agents.date_of_birth)) <= ? AND checkouts.created_at >= ? AND checkouts.created_at <= ? "
         unless age == 7
           statistic.value = Checkout.count_by_sql([sql, library.id, (age.to_s + 0.to_s).to_i, (age.to_s + 9.to_s).to_i, start_at, end_at])
         else
@@ -2126,7 +2126,7 @@ class Statistic < ActiveRecord::Base
         statistic.age = age
         statistic.option = 1
         statistic.library_id = library.id
-        sql = "select count(checkouts) from checkouts, items, exemplifies, manifestations, users librarian_users, patrons, libraries, users user_users where checkouts.item_id = items.id AND exemplifies.item_id = items.id AND exemplifies.manifestation_id = manifestations.id AND checkouts.librarian_id = librarian_users.id AND checkouts.user_id = user_users.id AND user_users.id = patrons.user_id AND librarian_users.library_id = libraries.id AND libraries.id = ? AND manifestations.ndc ~ '^[0-9]' AND date_part('year', age(patrons.date_of_birth)) >= ? AND date_part('year', age(patrons.date_of_birth)) <= ? AND checkouts.created_at >= ? AND checkouts.created_at <= ?"
+        sql = "select count(checkouts) from checkouts, items, exemplifies, manifestations, users librarian_users, agents, libraries, users user_users where checkouts.item_id = items.id AND exemplifies.item_id = items.id AND exemplifies.manifestation_id = manifestations.id AND checkouts.librarian_id = librarian_users.id AND checkouts.user_id = user_users.id AND user_users.id = agents.user_id AND librarian_users.library_id = libraries.id AND libraries.id = ? AND manifestations.ndc ~ '^[0-9]' AND date_part('year', age(agents.date_of_birth)) >= ? AND date_part('year', age(agents.date_of_birth)) <= ? AND checkouts.created_at >= ? AND checkouts.created_at <= ?"
         unless age == 7
           statistic.value = Checkout.count_by_sql([sql, library.id, (age.to_s + 0.to_s).to_i, (age.to_s + 9.to_s).to_i, start_at, end_at])
         else
@@ -2140,7 +2140,7 @@ class Statistic < ActiveRecord::Base
         statistic.age = age
         statistic.option = 2
         statistic.library_id = library.id
-        sql = "select count(checkouts) from checkouts, items, exemplifies, manifestations, users librarian_users, patrons, libraries, users user_users where checkouts.item_id = items.id AND exemplifies.item_id = items.id AND exemplifies.manifestation_id = manifestations.id AND checkouts.librarian_id = librarian_users.id AND checkouts.user_id = user_users.id AND user_users.id = patrons.user_id AND librarian_users.library_id = libraries.id AND libraries.id = ? AND manifestations.ndc ~ '^[KEC]' AND date_part('year', age(patrons.date_of_birth)) >= ? AND date_part('year', age(patrons.date_of_birth)) <= ? AND checkouts.created_at >= ? AND checkouts.created_at <= ?"
+        sql = "select count(checkouts) from checkouts, items, exemplifies, manifestations, users librarian_users, agents, libraries, users user_users where checkouts.item_id = items.id AND exemplifies.item_id = items.id AND exemplifies.manifestation_id = manifestations.id AND checkouts.librarian_id = librarian_users.id AND checkouts.user_id = user_users.id AND user_users.id = agents.user_id AND librarian_users.library_id = libraries.id AND libraries.id = ? AND manifestations.ndc ~ '^[KEC]' AND date_part('year', age(agents.date_of_birth)) >= ? AND date_part('year', age(agents.date_of_birth)) <= ? AND checkouts.created_at >= ? AND checkouts.created_at <= ?"
         unless age == 7
           statistic.value = Checkout.count_by_sql([sql, library.id, (age.to_s + 0.to_s).to_i, (age.to_s + 9.to_s).to_i, start_at, end_at])
         else
@@ -2154,7 +2154,7 @@ class Statistic < ActiveRecord::Base
         statistic.age = age
         statistic.option = 3
         statistic.library_id = library.id
-        sql = "select count(checkouts) from checkouts, items, exemplifies, manifestations, users librarian_users, patrons, users user_users, libraries where checkouts.item_id = items.id AND exemplifies.item_id = items.id AND exemplifies.manifestation_id = manifestations.id AND checkouts.librarian_id = librarian_users.id AND checkouts.user_id = user_users.id AND user_users.id = patrons.user_id AND librarian_users.library_id = libraries.id AND libraries.id = ? AND (manifestations.ndc ~ '^[^KEC0-9]' OR manifestations.ndc IS NULL) AND date_part('year', age(patrons.date_of_birth)) >= ? AND date_part('year', age(patrons.date_of_birth)) <= ? AND checkouts.created_at >= ? AND checkouts.created_at <= ?"
+        sql = "select count(checkouts) from checkouts, items, exemplifies, manifestations, users librarian_users, agents, users user_users, libraries where checkouts.item_id = items.id AND exemplifies.item_id = items.id AND exemplifies.manifestation_id = manifestations.id AND checkouts.librarian_id = librarian_users.id AND checkouts.user_id = user_users.id AND user_users.id = agents.user_id AND librarian_users.library_id = libraries.id AND libraries.id = ? AND (manifestations.ndc ~ '^[^KEC0-9]' OR manifestations.ndc IS NULL) AND date_part('year', age(agents.date_of_birth)) >= ? AND date_part('year', age(agents.date_of_birth)) <= ? AND checkouts.created_at >= ? AND checkouts.created_at <= ?"
         unless age == 7
           statistic.value = Checkout.count_by_sql([sql, library.id, (age.to_s + 0.to_s).to_i, (age.to_s + 9.to_s).to_i, start_at, end_at])
         else
@@ -2169,7 +2169,7 @@ class Statistic < ActiveRecord::Base
     set_date(statistic, start_at, term_id)
     statistic.data_type = data_type
     statistic.age = 10
-    sql = "select count(*) from checkouts, users, patrons where checkouts.user_id = users.id AND users.id = patrons.user_id AND patrons.date_of_birth IS NULL AND checkouts.created_at >= ? AND checkouts.created_at <= ? "
+    sql = "select count(*) from checkouts, users, agents where checkouts.user_id = users.id AND users.id = agents.user_id AND agents.date_of_birth IS NULL AND checkouts.created_at >= ? AND checkouts.created_at <= ? "
     statistic.value = Checkout.count_by_sql([sql, start_at, end_at])
     statistic.save! if statistic.value > 0
     # NDC for all option: 1 (ndc starts a number)
@@ -2178,7 +2178,7 @@ class Statistic < ActiveRecord::Base
     statistic.data_type = data_type
     statistic.age = 10
     statistic.option = 1
-    sql = "select count(checkouts) from checkouts, items, exemplifies, manifestations, users, patrons where checkouts.item_id = items.id AND exemplifies.item_id = items.id AND exemplifies.manifestation_id = manifestations.id AND checkouts.user_id = users.id AND users.id = patrons.user_id AND manifestations.ndc ~ '^[0-9]' AND patrons.date_of_birth IS NULL AND checkouts.created_at >= ? AND checkouts.created_at <= ?"
+    sql = "select count(checkouts) from checkouts, items, exemplifies, manifestations, users, agents where checkouts.item_id = items.id AND exemplifies.item_id = items.id AND exemplifies.manifestation_id = manifestations.id AND checkouts.user_id = users.id AND users.id = agents.user_id AND manifestations.ndc ~ '^[0-9]' AND agents.date_of_birth IS NULL AND checkouts.created_at >= ? AND checkouts.created_at <= ?"
     statistic.value = Checkout.count_by_sql([sql, start_at, end_at])
     statistic.save! if statistic.value > 0
     # NDC for kids option: 2 (ndc starts K/E/C)
@@ -2187,7 +2187,7 @@ class Statistic < ActiveRecord::Base
     statistic.data_type = data_type
     statistic.age = 10
     statistic.option = 2
-    sql = "select count(checkouts) from checkouts, items, exemplifies, manifestations, users, patrons where checkouts.item_id = items.id AND exemplifies.item_id = items.id AND exemplifies.manifestation_id = manifestations.id AND checkouts.user_id = users.id AND users.id = patrons.user_id AND manifestations.ndc ~ '^[KEC]' AND patrons.date_of_birth IS NULL AND checkouts.created_at >= ? AND checkouts.created_at <= ?"
+    sql = "select count(checkouts) from checkouts, items, exemplifies, manifestations, users, agents where checkouts.item_id = items.id AND exemplifies.item_id = items.id AND exemplifies.manifestation_id = manifestations.id AND checkouts.user_id = users.id AND users.id = agents.user_id AND manifestations.ndc ~ '^[KEC]' AND agents.date_of_birth IS NULL AND checkouts.created_at >= ? AND checkouts.created_at <= ?"
     statistic.value = Checkout.count_by_sql([sql, start_at, end_at])
     statistic.save! if statistic.value > 0
     # NDC for else option: 3 (no ndc or ndc starts other alfabet)
@@ -2196,7 +2196,7 @@ class Statistic < ActiveRecord::Base
     statistic.data_type = data_type
     statistic.age = 10
     statistic.option = 3
-    sql = "select count(checkouts) from checkouts, items, exemplifies, manifestations, users, patrons where checkouts.item_id = items.id AND exemplifies.item_id = items.id AND exemplifies.manifestation_id = manifestations.id AND checkouts.user_id = users.id AND users.id = patrons.user_id AND (manifestations.ndc ~ '^[^KEC0-9]' OR manifestations.ndc IS NULL) AND patrons.date_of_birth IS NULL AND checkouts.created_at >= ? AND checkouts.created_at <= ?"
+    sql = "select count(checkouts) from checkouts, items, exemplifies, manifestations, users, agents where checkouts.item_id = items.id AND exemplifies.item_id = items.id AND exemplifies.manifestation_id = manifestations.id AND checkouts.user_id = users.id AND users.id = agents.user_id AND (manifestations.ndc ~ '^[^KEC0-9]' OR manifestations.ndc IS NULL) AND agents.date_of_birth IS NULL AND checkouts.created_at >= ? AND checkouts.created_at <= ?"
     statistic.value = Checkout.count_by_sql([sql, start_at, end_at])
     @libraries.each do |library|
       statistic = Statistic.new
@@ -2204,7 +2204,7 @@ class Statistic < ActiveRecord::Base
       statistic.data_type = data_type
       statistic.age = 10
       statistic.library_id = library.id
-      sql = "select count(*) from checkouts, patrons, libraries, users librarian_users, users user_users where checkouts.librarian_id = librarian_users.id AND checkouts.user_id = user_users.id AND user_users.id = patrons.user_id AND librarian_users.library_id = libraries.id AND libraries.id = ? AND patrons.date_of_birth IS NULL AND checkouts.created_at >= ? AND checkouts.created_at <= ? "
+      sql = "select count(*) from checkouts, agents, libraries, users librarian_users, users user_users where checkouts.librarian_id = librarian_users.id AND checkouts.user_id = user_users.id AND user_users.id = agents.user_id AND librarian_users.library_id = libraries.id AND libraries.id = ? AND agents.date_of_birth IS NULL AND checkouts.created_at >= ? AND checkouts.created_at <= ? "
       statistic.value = Checkout.count_by_sql([sql, library.id, start_at, end_at])
       statistic.save! if statistic.value > 0
       # NDC for all option: 1 (ndc starts a number)
@@ -2214,7 +2214,7 @@ class Statistic < ActiveRecord::Base
       statistic.age = 10
       statistic.option = 1
       statistic.library_id = library.id
-      sql = "select count(checkouts) from checkouts, items, exemplifies, manifestations, users librarian_users, patrons, libraries, users user_users where checkouts.item_id = items.id AND exemplifies.item_id = items.id AND exemplifies.manifestation_id = manifestations.id AND checkouts.librarian_id = librarian_users.id AND checkouts.user_id = user_users.id AND user_users.id = patrons.user_id AND librarian_users.library_id = libraries.id AND libraries.id = ? AND manifestations.ndc ~ '^[0-9]' AND patrons.date_of_birth IS NULL AND checkouts.created_at >= ? AND checkouts.created_at <= ?"
+      sql = "select count(checkouts) from checkouts, items, exemplifies, manifestations, users librarian_users, agents, libraries, users user_users where checkouts.item_id = items.id AND exemplifies.item_id = items.id AND exemplifies.manifestation_id = manifestations.id AND checkouts.librarian_id = librarian_users.id AND checkouts.user_id = user_users.id AND user_users.id = agents.user_id AND librarian_users.library_id = libraries.id AND libraries.id = ? AND manifestations.ndc ~ '^[0-9]' AND agents.date_of_birth IS NULL AND checkouts.created_at >= ? AND checkouts.created_at <= ?"
       statistic.value = Checkout.count_by_sql([sql, library.id, start_at, end_at])
       statistic.save! if statistic.value > 0
       # NDC for kids option: 2 (ndc starts K/E/C)
@@ -2224,7 +2224,7 @@ class Statistic < ActiveRecord::Base
       statistic.age = 10
       statistic.option = 2
       statistic.library_id = library.id
-      sql = "select count(checkouts) from checkouts, items, exemplifies, manifestations, users librarian_users, patrons, libraries, users user_users where checkouts.item_id = items.id AND exemplifies.item_id = items.id AND exemplifies.manifestation_id = manifestations.id AND checkouts.librarian_id = librarian_users.id AND checkouts.user_id = user_users.id AND user_users.id = patrons.user_id AND librarian_users.library_id = libraries.id AND libraries.id = ? AND manifestations.ndc ~ '^[KEC]' AND patrons.date_of_birth IS NULL AND checkouts.created_at >= ? AND checkouts.created_at <= ?"
+      sql = "select count(checkouts) from checkouts, items, exemplifies, manifestations, users librarian_users, agents, libraries, users user_users where checkouts.item_id = items.id AND exemplifies.item_id = items.id AND exemplifies.manifestation_id = manifestations.id AND checkouts.librarian_id = librarian_users.id AND checkouts.user_id = user_users.id AND user_users.id = agents.user_id AND librarian_users.library_id = libraries.id AND libraries.id = ? AND manifestations.ndc ~ '^[KEC]' AND agents.date_of_birth IS NULL AND checkouts.created_at >= ? AND checkouts.created_at <= ?"
       statistic.value = Checkout.count_by_sql([sql, library.id, start_at, end_at])
       statistic.save! if statistic.value > 0
       # NDC for else option: 3 (no ndc or ndc starts other alfabet)
@@ -2234,7 +2234,7 @@ class Statistic < ActiveRecord::Base
       statistic.age = 10
       statistic.option = 3
       statistic.library_id = library.id
-      sql = "select count(checkouts) from checkouts, items, exemplifies, manifestations, users librarian_users, patrons, users user_users, libraries where checkouts.item_id = items.id AND exemplifies.item_id = items.id AND exemplifies.manifestation_id = manifestations.id AND checkouts.librarian_id = librarian_users.id AND checkouts.user_id = user_users.id AND user_users.id = patrons.user_id AND librarian_users.library_id = libraries.id AND libraries.id = ? AND (manifestations.ndc ~ '^[^KEC0-9]' OR manifestations.ndc IS NULL) AND patrons.date_of_birth IS NULL AND checkouts.created_at >= ? AND checkouts.created_at <= ?"
+      sql = "select count(checkouts) from checkouts, items, exemplifies, manifestations, users librarian_users, agents, users user_users, libraries where checkouts.item_id = items.id AND exemplifies.item_id = items.id AND exemplifies.manifestation_id = manifestations.id AND checkouts.librarian_id = librarian_users.id AND checkouts.user_id = user_users.id AND user_users.id = agents.user_id AND librarian_users.library_id = libraries.id AND libraries.id = ? AND (manifestations.ndc ~ '^[^KEC0-9]' OR manifestations.ndc IS NULL) AND agents.date_of_birth IS NULL AND checkouts.created_at >= ? AND checkouts.created_at <= ?"
       statistic.value = Checkout.count_by_sql([sql, library.id, start_at, end_at])
       statistic.save! if statistic.value > 0
     end
@@ -2246,7 +2246,7 @@ class Statistic < ActiveRecord::Base
       set_date(statistic, start_at, term_id)
       statistic.data_type = data_type
       statistic.age = age
-      sql = "select count(*) from reserves, users, patrons where reserves.user_id = users.id AND users.id = patrons.user_id AND date_part('year', age(patrons.date_of_birth)) >= ? AND date_part('year', age(patrons.date_of_birth)) <= ? AND reserves.created_at >= ? AND reserves.created_at  <= ?"
+      sql = "select count(*) from reserves, users, agents where reserves.user_id = users.id AND users.id = agents.user_id AND date_part('year', age(agents.date_of_birth)) >= ? AND date_part('year', age(agents.date_of_birth)) <= ? AND reserves.created_at >= ? AND reserves.created_at  <= ?"
       unless age == 7
         statistic.value = Reserve.count_by_sql([sql, (age.to_s + 0.to_s).to_i, (age.to_s + 9.to_s).to_i, start_at, end_at])
       else
@@ -2259,7 +2259,7 @@ class Statistic < ActiveRecord::Base
       statistic.data_type = data_type
       statistic.option = 1
       statistic.age = age
-      sql = "select count(*) from reserves, users, patrons where reserves.user_id = users.id AND users.id = patrons.user_id AND date_part('year', age(patrons.date_of_birth)) >= ? AND date_part('year', age(patrons.date_of_birth)) <= ? AND reserves.created_at >= ? AND reserves.created_at  <= ? AND reserves.created_by IN (?)"
+      sql = "select count(*) from reserves, users, agents where reserves.user_id = users.id AND users.id = agents.user_id AND date_part('year', age(agents.date_of_birth)) >= ? AND date_part('year', age(agents.date_of_birth)) <= ? AND reserves.created_at >= ? AND reserves.created_at  <= ? AND reserves.created_by IN (?)"
       unless age == 7
         statistic.value = Reserve.count_by_sql([sql, (age.to_s + 0.to_s).to_i, (age.to_s + 9.to_s).to_i, start_at, end_at, @librarian_ids])
       else
@@ -2272,7 +2272,7 @@ class Statistic < ActiveRecord::Base
       statistic.data_type = data_type
       statistic.option = 2
       statistic.age = age
-      sql = "select count(*) from reserves, users, patrons where reserves.user_id = users.id AND users.id = patrons.user_id AND date_part('year', age(patrons.date_of_birth)) >= ? AND date_part('year', age(patrons.date_of_birth)) <= ? AND reserves.created_at >= ? AND reserves.created_at  <= ? AND reserves.created_by NOT IN (?)"
+      sql = "select count(*) from reserves, users, agents where reserves.user_id = users.id AND users.id = agents.user_id AND date_part('year', age(agents.date_of_birth)) >= ? AND date_part('year', age(agents.date_of_birth)) <= ? AND reserves.created_at >= ? AND reserves.created_at  <= ? AND reserves.created_by NOT IN (?)"
       unless age == 7
         statistic.value = Reserve.count_by_sql([sql, (age.to_s + 0.to_s).to_i, (age.to_s + 9.to_s).to_i, start_at, end_at, @librarian_ids])
       else
@@ -2287,7 +2287,7 @@ class Statistic < ActiveRecord::Base
         statistic.data_type = data_type
         statistic.age = age
         statistic.library_id = library.id
-        sql = "select count(*) from reserves, users, patrons, libraries where reserves.user_id = users.id AND users.id = patrons.user_id AND users.library_id = libraries.id AND libraries.id = ? AND date_part('year', age(patrons.date_of_birth)) >= ? AND date_part('year', age(patrons.date_of_birth)) <= ? AND reserves.created_at >= ? AND reserves.created_at  <= ?"       
+        sql = "select count(*) from reserves, users, agents, libraries where reserves.user_id = users.id AND users.id = agents.user_id AND users.library_id = libraries.id AND libraries.id = ? AND date_part('year', age(agents.date_of_birth)) >= ? AND date_part('year', age(agents.date_of_birth)) <= ? AND reserves.created_at >= ? AND reserves.created_at  <= ?"       
         unless age == 7
           statistic.value = Reserve.count_by_sql([sql, library.id, (age.to_s + 0.to_s).to_i, (age.to_s + 9.to_s).to_i, start_at, end_at])
         else
@@ -2301,7 +2301,7 @@ class Statistic < ActiveRecord::Base
         statistic.option = 1
         statistic.age = age
         statistic.library_id = library.id
-        sql = "select count(*) from reserves, users, patrons, libraries where reserves.user_id = users.id AND users.id = patrons.user_id AND users.library_id = libraries.id AND libraries.id = ? AND date_part('year', age(patrons.date_of_birth)) >= ? AND date_part('year', age(patrons.date_of_birth)) <= ? AND reserves.created_at >= ? AND reserves.created_at  <= ? AND reserves.created_by IN (?)"       
+        sql = "select count(*) from reserves, users, agents, libraries where reserves.user_id = users.id AND users.id = agents.user_id AND users.library_id = libraries.id AND libraries.id = ? AND date_part('year', age(agents.date_of_birth)) >= ? AND date_part('year', age(agents.date_of_birth)) <= ? AND reserves.created_at >= ? AND reserves.created_at  <= ? AND reserves.created_by IN (?)"       
         unless age == 7
           statistic.value = Reserve.count_by_sql([sql, library.id, (age.to_s + 0.to_s).to_i, (age.to_s + 9.to_s).to_i, start_at, end_at, @librarian_ids])
         else
@@ -2315,7 +2315,7 @@ class Statistic < ActiveRecord::Base
         statistic.option = 2
         statistic.age = age
         statistic.library_id = library.id
-        sql = "select count(*) from reserves, users, patrons, libraries where reserves.user_id = users.id AND users.id = patrons.user_id AND users.library_id = libraries.id AND libraries.id = ? AND date_part('year', age(patrons.date_of_birth)) >= ? AND date_part('year', age(patrons.date_of_birth)) <= ? AND reserves.created_at >= ? AND reserves.created_at  <= ? AND reserves.created_by NOT IN (?)"       
+        sql = "select count(*) from reserves, users, agents, libraries where reserves.user_id = users.id AND users.id = agents.user_id AND users.library_id = libraries.id AND libraries.id = ? AND date_part('year', age(agents.date_of_birth)) >= ? AND date_part('year', age(agents.date_of_birth)) <= ? AND reserves.created_at >= ? AND reserves.created_at  <= ? AND reserves.created_by NOT IN (?)"       
         unless age == 7
           statistic.value = Reserve.count_by_sql([sql, library.id, (age.to_s + 0.to_s).to_i, (age.to_s + 9.to_s).to_i, start_at, end_at, @librarian_ids])
         else
@@ -2331,7 +2331,7 @@ class Statistic < ActiveRecord::Base
     set_date(statistic, start_at, term_id)
     statistic.data_type = data_type
     statistic.age = 10
-    sql = "select count(*) from reserves, users, patrons where reserves.user_id = users.id AND users.id = patrons.user_id AND patrons.date_of_birth IS NULL AND reserves.created_at >= ? AND reserves.created_at  <= ?"
+    sql = "select count(*) from reserves, users, agents where reserves.user_id = users.id AND users.id = agents.user_id AND agents.date_of_birth IS NULL AND reserves.created_at >= ? AND reserves.created_at  <= ?"
     statistic.value = Reserve.count_by_sql([sql, start_at, end_at])
     statistic.save! if statistic.value > 0
     # on counter option: 1
@@ -2340,7 +2340,7 @@ class Statistic < ActiveRecord::Base
     statistic.data_type = data_type
     statistic.option = 1
     statistic.age = 10
-    sql = "select count(*) from reserves, users, patrons where reserves.user_id = users.id AND users.id = patrons.user_id AND patrons.date_of_birth IS NULL AND reserves.created_at >= ? AND reserves.created_at  <= ? AND reserves.created_by IN (?)"
+    sql = "select count(*) from reserves, users, agents where reserves.user_id = users.id AND users.id = agents.user_id AND agents.date_of_birth IS NULL AND reserves.created_at >= ? AND reserves.created_at  <= ? AND reserves.created_by IN (?)"
     statistic.value = Reserve.count_by_sql([sql, start_at, end_at, @librarian_ids])
     statistic.save! if statistic.value > 0
     # from OPAC
@@ -2349,7 +2349,7 @@ class Statistic < ActiveRecord::Base
     statistic.data_type = data_type
     statistic.option = 2
     statistic.age = 10
-    sql = "select count(*) from reserves, users, patrons where reserves.user_id = users.id AND users.id = patrons.user_id AND patrons.date_of_birth IS NULL AND reserves.created_at >= ? AND reserves.created_at  <= ? AND reserves.created_by NOT IN (?)"
+    sql = "select count(*) from reserves, users, agents where reserves.user_id = users.id AND users.id = agents.user_id AND agents.date_of_birth IS NULL AND reserves.created_at >= ? AND reserves.created_at  <= ? AND reserves.created_by NOT IN (?)"
     statistic.value = Reserve.count_by_sql([sql, start_at, end_at, @librarian_ids])
     statistic.save! if statistic.value > 0
     @libraries.each do |library|
@@ -2358,7 +2358,7 @@ class Statistic < ActiveRecord::Base
       statistic.data_type = data_type
       statistic.age = 10
       statistic.library_id = library.id
-      sql = "select count(*) from reserves, users, patrons, libraries where reserves.user_id = users.id AND users.id = patrons.user_id AND users.library_id = libraries.id AND libraries.id = ? AND patrons.date_of_birth IS NULL AND reserves.created_at >= ? AND reserves.created_at  <= ?"       
+      sql = "select count(*) from reserves, users, agents, libraries where reserves.user_id = users.id AND users.id = agents.user_id AND users.library_id = libraries.id AND libraries.id = ? AND agents.date_of_birth IS NULL AND reserves.created_at >= ? AND reserves.created_at  <= ?"       
       statistic.value = Reserve.count_by_sql([sql, library.id, start_at, end_at])
       statistic.save! if statistic.value > 0
       # on counter
@@ -2368,7 +2368,7 @@ class Statistic < ActiveRecord::Base
       statistic.option = 1
       statistic.age = 10
       statistic.library_id = library.id
-      sql = "select count(*) from reserves, users, patrons, libraries where reserves.user_id = users.id AND users.id = patrons.user_id AND users.library_id = libraries.id AND libraries.id = ? AND patrons.date_of_birth IS NULL AND reserves.created_at >= ? AND reserves.created_at  <= ? AND reserves.created_by IN (?)"       
+      sql = "select count(*) from reserves, users, agents, libraries where reserves.user_id = users.id AND users.id = agents.user_id AND users.library_id = libraries.id AND libraries.id = ? AND agents.date_of_birth IS NULL AND reserves.created_at >= ? AND reserves.created_at  <= ? AND reserves.created_by IN (?)"       
       statistic.value = Reserve.count_by_sql([sql, library.id, start_at, end_at, @librarian_ids])
       statistic.save! if statistic.value > 0
       # from OPAC
@@ -2378,7 +2378,7 @@ class Statistic < ActiveRecord::Base
       statistic.option = 2
       statistic.age = 10
       statistic.library_id = library.id
-      sql = "select count(*) from reserves, users, patrons, libraries where reserves.user_id = users.id AND users.id = patrons.user_id AND users.library_id = libraries.id AND libraries.id = ? AND patrons.date_of_birth IS NULL AND reserves.created_at >= ? AND reserves.created_at  <= ? AND reserves.created_by NOT IN (?)"       
+      sql = "select count(*) from reserves, users, agents, libraries where reserves.user_id = users.id AND users.id = agents.user_id AND users.library_id = libraries.id AND libraries.id = ? AND agents.date_of_birth IS NULL AND reserves.created_at >= ? AND reserves.created_at  <= ? AND reserves.created_by NOT IN (?)"       
       statistic.value = Reserve.count_by_sql([sql, library.id, start_at, end_at, @librarian_ids])
       statistic.save! if statistic.value > 0
     end
@@ -2390,7 +2390,7 @@ class Statistic < ActiveRecord::Base
       set_date(statistic, start_at, term_id)
       statistic.data_type = data_type
       statistic.age = age
-      sql = "select count(*) from questions, users, patrons where questions.user_id = users.id AND users.id = patrons.user_id AND date_part('year', age(patrons.date_of_birth)) >= ? AND date_part('year', age(patrons.date_of_birth)) <= ? AND questions.created_at >= ? AND questions.created_at  <= ?"
+      sql = "select count(*) from questions, users, agents where questions.user_id = users.id AND users.id = agents.user_id AND date_part('year', age(agents.date_of_birth)) >= ? AND date_part('year', age(agents.date_of_birth)) <= ? AND questions.created_at >= ? AND questions.created_at  <= ?"
       unless age == 7
         statistic.value = Question.count_by_sql([sql, (age.to_s + 0.to_s).to_i, (age.to_s + 9.to_s).to_i, start_at, end_at])
       else 
@@ -2405,7 +2405,7 @@ class Statistic < ActiveRecord::Base
         statistic.data_type = data_type
         statistic.age = age
         statistic.library_id = library.id
-        sql = "select count(*) from questions, users, patrons, libraries where questions.user_id = users.id AND users.id = patrons.user_id AND users.library_id = libraries.id AND libraries.id = ? AND date_part('year', age(patrons.date_of_birth)) >= ? AND date_part('year', age(patrons.date_of_birth)) <= ? AND questions.created_at >= ? AND questions.created_at  <= ?"        
+        sql = "select count(*) from questions, users, agents, libraries where questions.user_id = users.id AND users.id = agents.user_id AND users.library_id = libraries.id AND libraries.id = ? AND date_part('year', age(agents.date_of_birth)) >= ? AND date_part('year', age(agents.date_of_birth)) <= ? AND questions.created_at >= ? AND questions.created_at  <= ?"        
         unless age == 7
           statistic.value = Question.count_by_sql([sql, library.id, (age.to_s + 0.to_s).to_i, (age.to_s + 9.to_s).to_i, start_at, end_at])
         else
@@ -2421,7 +2421,7 @@ class Statistic < ActiveRecord::Base
     set_date(statistic, start_at, term_id)
     statistic.data_type = data_type
     statistic.age = 10
-    sql = "select count(*) from questions, users, patrons where questions.user_id = users.id AND users.id = patrons.user_id AND patrons.date_of_birth IS NULL AND questions.created_at >= ? AND questions.created_at  <= ?"
+    sql = "select count(*) from questions, users, agents where questions.user_id = users.id AND users.id = agents.user_id AND agents.date_of_birth IS NULL AND questions.created_at >= ? AND questions.created_at  <= ?"
     statistic.value = Question.count_by_sql([sql, start_at, end_at])
     statistic.save! if statistic.value > 0
     @libraries.each do |library|
@@ -2430,7 +2430,7 @@ class Statistic < ActiveRecord::Base
       statistic.data_type = data_type
       statistic.age = 10
       statistic.library_id = library.id
-      sql = "select count(*) from questions, users, patrons, libraries where questions.user_id = users.id AND users.id = patrons.user_id AND users.library_id = libraries.id AND libraries.id = ? AND patrons.date_of_birth IS NULL AND questions.created_at >= ? AND questions.created_at  <= ?"        
+      sql = "select count(*) from questions, users, agents, libraries where questions.user_id = users.id AND users.id = agents.user_id AND users.library_id = libraries.id AND libraries.id = ? AND agents.date_of_birth IS NULL AND questions.created_at >= ? AND questions.created_at  <= ?"        
       statistic.value = Question.count_by_sql([sql, library.id, start_at, end_at])
       statistic.save! if statistic.value > 0
     end

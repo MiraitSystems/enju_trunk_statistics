@@ -4,7 +4,7 @@ require 'database_cleaner'
 
 describe Statistic do
   fixtures :all
-#  fixtures :patron_types, :countries, :languages, :checkout_types, :circulation_statuses, :carrier_types, :roles, 
+#  fixtures :agent_types, :countries, :languages, :checkout_types, :circulation_statuses, :carrier_types, :roles, 
 #           :user_groups, :user_group_has_checkout_types, :request_status_types, :carrier_type_has_checkout_types, 
 #           :retention_periods, :manifestation_types, :user_statuses
   now = Time.now
@@ -12,8 +12,8 @@ describe Statistic do
   month = now.strftime("%Y%m")
   time_num = now.hour
 
-  DatabaseCleaner.strategy = :truncation, {:except => %w[patron_types countries languages checkout_types circulation_statuses carrier_types roles user_groups user_group_has_checkout_types request_status_types carrier_type_has_checkout_types retention_periods manifestation_types user_statuses]}
-  DatabaseCleaner.clean_with :truncation, {:except => %w[patron_types countries languages checkout_types circulation_statuses carrier_types roles user_groups user_group_has_checkout_types request_status_types carrier_type_has_checkout_types retention_periods manifestatioy_types user_statuses]}
+  DatabaseCleaner.strategy = :truncation, {:except => %w[agent_types countries languages checkout_types circulation_statuses carrier_types roles user_groups user_group_has_checkout_types request_status_types carrier_type_has_checkout_types retention_periods manifestation_types user_statuses]}
+  DatabaseCleaner.clean_with :truncation, {:except => %w[agent_types countries languages checkout_types circulation_statuses carrier_types roles user_groups user_group_has_checkout_types request_status_types carrier_type_has_checkout_types retention_periods manifestatioy_types user_statuses]}
 
   libraryA = FactoryGirl.create(:libraryA)
   libraryB = FactoryGirl.create(:libraryB)
@@ -28,8 +28,8 @@ describe Statistic do
     tmps << FactoryGirl.create(:juniors_user) # libraryB
     tmps << FactoryGirl.create(:elements_user) # libraryB
     tmps << FactoryGirl.create(:children_user) # libraryB
-    tmps.map{|user| user.patron.update_attributes(:address_1 => "gotanda 2-3")} if i == 1
-    tmps.map{|user| user.patron.update_attributes(:address_1 => "aoyama 32")} if i == 2     
+    tmps.map{|user| user.agent.update_attributes(:address_1 => "gotanda 2-3")} if i == 1
+    tmps.map{|user| user.agent.update_attributes(:address_1 => "aoyama 32")} if i == 2     
   end
   3.times do
     # not completely registed

@@ -3,10 +3,10 @@ require 'spec_helper'
 require 'database_cleaner'
 
 describe Statistic do
-  fixtures :patron_types, :countries, :languages, :checkout_types, :circulation_statuses, :carrier_types, :roles, :user_groups, :user_group_has_checkout_types, :request_status_types, :carrier_type_has_checkout_types
+  fixtures :agent_types, :countries, :languages, :checkout_types, :circulation_statuses, :carrier_types, :roles, :user_groups, :user_group_has_checkout_types, :request_status_types, :carrier_type_has_checkout_types
 
-  DatabaseCleaner.strategy = :truncation, {:except => %w[patron_types countries languages checkout_types circulation_statuses carrier_types roles user_groups user_group_has_checkout_types request_status_types carrier_type_has_checkout_types]}
-  DatabaseCleaner.clean_with :truncation, {:except => %w[patron_types countries languages checkout_types circulation_statuses carrier_types roles user_groups user_group_has_checkout_types request_status_types carrier_type_has_checkout_types]}
+  DatabaseCleaner.strategy = :truncation, {:except => %w[agent_types countries languages checkout_types circulation_statuses carrier_types roles user_groups user_group_has_checkout_types request_status_types carrier_type_has_checkout_types]}
+  DatabaseCleaner.clean_with :truncation, {:except => %w[agent_types countries languages checkout_types circulation_statuses carrier_types roles user_groups user_group_has_checkout_types request_status_types carrier_type_has_checkout_types]}
 
   libraryA = FactoryGirl.create(:libraryA)
   libraryB = FactoryGirl.create(:libraryB)
